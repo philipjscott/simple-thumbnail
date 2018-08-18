@@ -3,7 +3,7 @@
 const ffmpeg = require('fluent-ffmpeg')
 const parsePath = require('parse-filepath')
 
-function generateThumbnail (inputFile, outputFile, size = '150x100') {
+function generateThumbnail (inputFile, outputFile, size) {
   const parsedPath = parsePath(outputFile)
 
   return ffmpeg(inputFile).takeScreenshots({
