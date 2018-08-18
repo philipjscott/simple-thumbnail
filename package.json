@@ -1,6 +1,6 @@
 {
   "name": "simple-thumbnail",
-  "version": "1.0.0",
+  "version": "0.0.0-development",
   "description": "A wrapper library of fluent-ffmpeg that produces a thumbnail image from a video's first frame",
   "main": "index.js",
   "license": "MIT",
@@ -14,7 +14,9 @@
   "scripts": {
     "fix": "standard --fix",
     "lint": "standard",
-    "test": "yarn run lint && nyc mocha --reporter spec"
+    "test": "yarn run lint && nyc mocha --reporter spec",
+    "semantic-release": "semantic-release",
+    "travis-deploy-once": "travis-deploy-once"
   },
   "repository": {
     "type": "git",
@@ -32,6 +34,8 @@
     "looks-same": "^3.3.0",
     "mocha": "^5.2.0",
     "nyc": "^12.0.2",
-    "standard": "^11.0.1"
+    "standard": "^11.0.1",
+    "semantic-release": "^15.9.9",
+    "travis-deploy-once": "^5.0.2"
   }
 }
