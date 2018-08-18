@@ -27,15 +27,16 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
 
       const fixedWidth = genThumbnail(input, `./test/out/${elem}.png`, '250x?')
       const fixedSize = genThumbnail(input, `./test/out/${elem}-skewed.png`, '300x300')
-      const defaultSize = genThumbnail(input, `./test/out/${elem}-default.png`)
 
-      return [fixedWidth, fixedSize, defaultSize]
+      return [fixedWidth, fixedSize]
     })
 
     try {
       await Promise.all(flatten(nestedPromises))
     } catch (err) {
-      expect.fail(err)
+      console.log(err)
+
+      expect.fail()
     }
   })
 
@@ -48,8 +49,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       const config = { tolerance: 0 }
       const versions = [
         `${elem}.png`,
-        `${elem}-skewed.png`,
-        `${elem}-default.png`
+        `${elem}-skewed.png`
       ]
 
       return versions.map(x => looksSame(res(x), out(x), config))
@@ -60,7 +60,9 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
 
       expect(areIdentical.every(x => x)).to.be.true()
     } catch (err) {
-      expect.fail(err)
+      console.error(err)
+
+      expect.fail()
     }
   })
 })
