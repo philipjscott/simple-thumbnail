@@ -7,6 +7,8 @@ cache:
     - ~/.npm
 notifications:
   email: false
+sudo: required
+dist: trusty
 node_js:
   - '10'
   - '9'
