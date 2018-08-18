@@ -1,5 +1,6 @@
 language: node_js
 script:
+  - ./scripts/install.sh
   - npm run test
 cache:
   directories:
