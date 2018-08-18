@@ -2,37 +2,47 @@
 
 'use strict'
 
+const fs = require('fs-extra')
+const path = require('path')
+const util = require('util')
+
 const chai = require('chai')
 const dirtyChai = require('dirty-chai')
-const genThumbnail = require('../')
+
 const filePromise = require('./data')
-const fs = require('fs-extra')
-const util = require('util')
-const looksSame = util.promisify(require('looks-same'))
 const flatten = require('array-flatten')
+const genThumbnail = require('../')
+const looksSame = util.promisify(require('looks-same'))
+const sleep = require('sleep-promise')
+
 const { expect } = chai
+const absolutePath = relative => path.join(__dirname, relative)
 
 chai.use(dirtyChai)
 
 describe('simple-thumbnail creates thumbnails for videos', () => {
-  before(() => {
-    return fs.mkdirp('./test/out')
+  before(async () => {
+    await fs.remove(absolutePath('./out'))
+    await fs.mkdirp(absolutePath('./out'))
   })
 
   it('successfully generates thumbnails', async () => {
     const files = await filePromise()
 
     const nestedPromises = files.map(elem => {
-      const input = `./test/data/${elem}.webm`
+      const input = absolutePath(`./data/${elem}.webm`)
+      const fixedWidthPath = absolutePath(`./out/${elem}.png`)
+      const fixedSizePath = absolutePath(`./out/${elem}-skewed.png`)
 
-      const fixedWidth = genThumbnail(input, `./test/out/${elem}.png`, '250x?')
-      const fixedSize = genThumbnail(input, `./test/out/${elem}-skewed.png`, '300x300')
+      const fixedWidth = genThumbnail(input, fixedWidthPath, '250x?')
+      const fixedSize = genThumbnail(input, fixedSizePath, '300x300')
 
       return [fixedWidth, fixedSize]
     })
 
     try {
       await Promise.all(flatten(nestedPromises))
+      await sleep(1000) // Awkward race condition
     } catch (err) {
       console.log(err)
 
@@ -44,8 +54,8 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
     const files = await filePromise()
 
     const nestedPromises = files.map(elem => {
-      const out = x => `./test/out/${x}`
-      const res = x => `./test/result/${x}`
+      const out = x => absolutePath(`./out/${x}`)
+      const res = x => absolutePath(`./result/${x}`)
       const config = { tolerance: 0 }
       const versions = [
         `${elem}.png`,
