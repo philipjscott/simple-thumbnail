@@ -1,8 +1,15 @@
 {
   "name": "simple-thumbnail",
   "version": "1.0.0",
+  "description": "A wrapper library of fluent-ffmpeg that produces a thumbnail image from a video's first frame",
   "main": "index.js",
   "license": "MIT",
+  "keywords": [
+    "thumbnail",
+    "video",
+    "ffmpeg",
+    "video thumbnail"
+  ],
   "scripts": {
     "fix": "standard --fix",
     "lint": "standard",
