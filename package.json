@@ -14,7 +14,7 @@
   "scripts": {
     "fix": "standard --fix",
     "lint": "standard",
-    "test": "yarn run lint && nyc mocha --reporter spec",
+    "test": "yarn run lint && nyc mocha --reporter spec --timeout 7500",
     "semantic-release": "semantic-release",
     "travis-deploy-once": "travis-deploy-once"
   },
