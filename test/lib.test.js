@@ -13,7 +13,6 @@ const filePromise = require('./data')
 const flatten = require('array-flatten')
 const genThumbnail = require('../')
 const looksSame = util.promisify(require('looks-same'))
-const sleep = require('sleep-promise')
 
 const { expect } = chai
 const absolutePath = relative => path.join(__dirname, relative)
@@ -51,8 +50,6 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
 
   it('made thumbnails identical to expected results', async () => {
     const files = await filePromise()
-
-    await sleep(10000) // Awkward race condition
 
     const nestedPromises = files.map(elem => {
       const out = x => absolutePath(`./out/${x}`)
