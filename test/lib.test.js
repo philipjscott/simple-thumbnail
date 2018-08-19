@@ -52,7 +52,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
   it('made thumbnails identical to expected results', async () => {
     const files = await filePromise()
 
-    await sleep(3000) // Awkward race condition
+    await sleep(10000) // Awkward race condition
 
     const nestedPromises = files.map(elem => {
       const out = x => absolutePath(`./out/${x}`)
