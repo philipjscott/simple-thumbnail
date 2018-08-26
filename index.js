@@ -1,9 +1,17 @@
+/* eslint-disable camelcase */
+
 'use strict'
 
+const ffprobe = require('ffprobe-client')
+const download = require('partial-load')
 const { spawn } = require('child_process')
+const { unlink } = require('fs')
+const { promisify } = require('util')
 const https = require('https')
 const http = require('http')
 const url = require('url')
+
+const removeFile = promisify(unlink)
 
 function parseInput (input) {
   let isStream
@@ -69,14 +77,12 @@ function ffmpegExecute (path, args, stream = null) {
   return new Promise((resolve, reject) => {
     if (stream) {
       stream.pipe(ffmpeg.stdin)
-
-      // silence ffmpeg stdin errors; occurs even on success
-      // ffmpeg.stdin.on('error', () => {})
     }
 
     ffmpeg.stderr.on('data', (data) => {
       stderr += data.toString()
     })
+    // use sinon to test this
     ffmpeg.stderr.on('error', (err) => {
       reject(err)
     })
@@ -92,23 +98,57 @@ function ffmpegExecute (path, args, stream = null) {
   })
 }
 
-function thumbnail (input, output, size, config = {}) {
-  const path = config.path || 'ffmpeg'
+function naiveThumbnail (input, output, dims, misc) {
+  const { paths, limit, temp } = misc
+  const args = buildArgs(input, output, dims)
+
+  return ffprobe(input, { path: paths.ffprobe })
+    .then((data) => {
+      const { bit_rate, size, duration } = data.format
+      let byteSecond
+
+      if (bit_rate && size && duration) {
+        const byteRate = bit_rate / 8
+        const overhead = size - byteRate * duration
+
+        byteSecond = overhead + 1 * byteRate
+      }
+
+      return byteSecond || limit
+    })
+    .then((downloadLimit) => download(input, output, downloadLimit))
+    .then(() => ffmpegExecute(paths.ffmpeg, args))
+    .finally(() => removeFile(temp))
+}
+
+function thumbnail (input, output, size, config = { path: {} }) {
+  const naiveLimit = config.limit || 1024 * 512
+  const naiveTemp = config.temp || 'simple-thumbnail-tmp.png'
+  const ffmpegPath = config.path.ffmpeg || 'ffmpeg'
+
   const dims = parseSize(size)
   const { driver, isStream, inputArg } = parseInput(input)
   const args = buildArgs(inputArg, output, dims)
 
   if (!driver && isStream) {
-    return ffmpegExecute(path, args, input)
+    return ffmpegExecute(ffmpegPath, args, input)
   }
 
   if (!driver) {
-    return ffmpegExecute(path, args)
+    return ffmpegExecute(ffmpegPath, args)
   }
 
   return new Promise((resolve, reject) => {
     driver.get(input, (res) => {
-      resolve(ffmpegExecute(path, args, res))
+      const thumbnailPromise = ffmpegExecute(ffmpegPath, args, res).catch(() => {
+        return naiveThumbnail(input, output, dims, {
+          limit: naiveLimit,
+          temp: naiveTemp,
+          paths: config.path
+        })
+      })
+
+      resolve(thumbnailPromise)
     })
   })
 }

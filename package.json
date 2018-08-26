@@ -36,6 +36,7 @@
     "nock": "^9.6.1",
     "nyc": "^12.0.2",
     "semantic-release": "^15.9.9",
+    "sinon": "^6.1.5",
     "standard": "^11.0.1",
     "travis-deploy-once": "^5.0.2"
   }

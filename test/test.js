@@ -28,17 +28,34 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
   })
 
   describe('invalid input', () => {
+    const filePath = absolutePath('./data/bunny.webm')
+    const outPath = absolutePath('./out/invalid.png')
+
     it('throws an error on malformed size string', async () => {
       try {
-
+        await genThumbnail(filePath, outPath, 'not a real size')
       } catch (err) {
-
+        expect(err.message).to.equal('Invalid size argument')
       }
     })
 
     it('throws an error given a "?x?" size string', async () => {
       try {
-        await genThumbnail(
+        await genThumbnail(filePath, outPath, '?x?')
+      } catch (err) {
+        expect(err.message).to.equal('Invalid size argument')
+      }
+    })
+
+    it('throws a ffmpeg stderr dump on non-zero exit', async () => {
+      try {
+        await genThumbnail('not a real path', outPath, '200x200')
+      } catch (err) {
+        const stderrLines = err.message.split('\n')
+
+        expect(stderrLines[0]).to.equal('ffmpeg exited 1')
+        expect(stderrLines[1]).to.equal('ffmpeg stderr:')
+      }
     })
   })
 
