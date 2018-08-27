@@ -15,7 +15,7 @@ $ npm install simple-thumbnail --save
 ## Usage
 
 ```js
-const thumbnail = require('simple-thumbnail')
+const genThumbnail = require('simple-thumbnail')
 
 // promise
 genThumbnail('path/to/video.webm', 'output/file/path.png', '250x?')

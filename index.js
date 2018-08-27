@@ -68,7 +68,7 @@ function ffmpegExecute (path, args, stream = null) {
   })
 }
 
-function thumbnail (input, output, size, config = {}) {
+function genThumbnail (input, output, size, config = {}) {
   const ffmpegPath = config.path || 'ffmpeg'
 
   const parsedSize = parseSize(size)
