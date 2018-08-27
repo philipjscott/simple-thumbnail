@@ -1,71 +1,41 @@
-/* eslint-disable camelcase */
-
 'use strict'
 
-const ffprobe = require('ffprobe-client')
-const download = require('partial-load')
 const { spawn } = require('child_process')
-const { unlink } = require('fs')
-const { promisify } = require('util')
-const https = require('https')
-const http = require('http')
-const url = require('url')
-
-const removeFile = promisify(unlink)
-
-function parseInput (input) {
-  let isStream
-  let inputArg
-  let driver
-
-  if (typeof input !== 'string') {
-    inputArg = 'pipe:0'
-    driver = null
-    isStream = true
-  } else if (url.parse(input).protocol) {
-    const { protocol } = url.parse(input)
-
-    inputArg = 'pipe:0'
-    driver = protocol === 'https:' ? https : http
-    isStream = false
-  } else {
-    inputArg = input
-    driver = null
-    isStream = false
-  }
-
-  return {
-    inputArg,
-    driver,
-    isStream
-  }
-}
 
 function parseSize (sizeStr) {
-  const regex = /(\d+|\?)x(\d+|\?)/g
-  let width
-  let height
+  const percentRegex = /(\d+)%/g
+  const sizeRegex = /(\d+|\?)x(\d+|\?)/g
+  let payload
 
-  try {
-    const res = regex
-      .exec(sizeStr)
-      .map(x => x === '?' ? null : Number.parseInt(x))
+  const percentResult = percentRegex.exec(sizeStr)
+  const sizeResult = sizeRegex.exec(sizeStr)
 
-    width = res[1]
-    height = res[2]
-  } catch (e) {
+  if (percentResult) {
+    payload = { percentage: Number.parseInt(percentResult[1]) }
+  } else if (sizeResult) {
+    const sizeValues = sizeResult.map(x => x === '?' ? null : Number.parseInt(x))
+
+    payload = {
+      width: sizeValues[1],
+      height: sizeValues[2]
+    }
+  } else {
     throw new Error('Invalid size argument')
   }
 
-  return { width, height }
+  return payload
 }
 
-function buildArgs (input, output, { width, height }) {
+function buildArgs (input, output, { width, height, percentage }) {
+  const scaleArg = (percentage)
+    ? `-vf scale=iw*${percentage / 100}:ih*${percentage / 100}`
+    : `-vf scale=${width || -1}:${height || -1}`
+
   return [
     '-y',
     `-i ${input}`,
     '-vframes 1',
-    `-filter:v scale=${width || -1}:${height || -1}`,
+    scaleArg,
     output
   ]
 }
@@ -82,7 +52,7 @@ function ffmpegExecute (path, args, stream = null) {
     ffmpeg.stderr.on('data', (data) => {
       stderr += data.toString()
     })
-    // use sinon to test this
+    // use sinon?
     ffmpeg.stderr.on('error', (err) => {
       reject(err)
     })
@@ -98,59 +68,19 @@ function ffmpegExecute (path, args, stream = null) {
   })
 }
 
-function naiveThumbnail (input, output, dims, misc) {
-  const { paths, limit, temp } = misc
-  const args = buildArgs(input, output, dims)
+function thumbnail (input, output, size, config = {}) {
+  const ffmpegPath = config.path || 'ffmpeg'
 
-  return ffprobe(input, { path: paths.ffprobe })
-    .then((data) => {
-      const { bit_rate, size, duration } = data.format
-      let byteSecond
+  const parsedSize = parseSize(size)
+  const args = buildArgs(
+    typeof input === 'string' ? input : 'pipe:0',
+    output,
+    parsedSize
+  )
 
-      if (bit_rate && size && duration) {
-        const byteRate = bit_rate / 8
-        const overhead = size - byteRate * duration
-
-        byteSecond = overhead + 1 * byteRate
-      }
-
-      return byteSecond || limit
-    })
-    .then((downloadLimit) => download(input, output, downloadLimit))
-    .then(() => ffmpegExecute(paths.ffmpeg, args))
-    .finally(() => removeFile(temp))
-}
-
-function thumbnail (input, output, size, config = { path: {} }) {
-  const naiveLimit = config.limit || 1024 * 512
-  const naiveTemp = config.temp || 'simple-thumbnail-tmp.png'
-  const ffmpegPath = config.path.ffmpeg || 'ffmpeg'
-
-  const dims = parseSize(size)
-  const { driver, isStream, inputArg } = parseInput(input)
-  const args = buildArgs(inputArg, output, dims)
-
-  if (!driver && isStream) {
-    return ffmpegExecute(ffmpegPath, args, input)
-  }
-
-  if (!driver) {
-    return ffmpegExecute(ffmpegPath, args)
-  }
-
-  return new Promise((resolve, reject) => {
-    driver.get(input, (res) => {
-      const thumbnailPromise = ffmpegExecute(ffmpegPath, args, res).catch(() => {
-        return naiveThumbnail(input, output, dims, {
-          limit: naiveLimit,
-          temp: naiveTemp,
-          paths: config.path
-        })
-      })
-
-      resolve(thumbnailPromise)
-    })
-  })
+  return typeof input === 'string'
+    ? ffmpegExecute(ffmpegPath, args)
+    : ffmpegExecute(ffmpegPath, args, input)
 }
 
 module.exports = thumbnail

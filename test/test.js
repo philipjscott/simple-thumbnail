@@ -10,8 +10,6 @@ const url = require('url')
 const chai = require('chai')
 const dirtyChai = require('dirty-chai')
 
-const filePromise = require('./data')
-const flatten = require('array-flatten')
 const genThumbnail = require('../')
 const looksSame = util.promisify(require('looks-same'))
 const nock = require('nock')
@@ -22,13 +20,17 @@ const absolutePath = relative => path.join(__dirname, relative)
 chai.use(dirtyChai)
 
 describe('simple-thumbnail creates thumbnails for videos', () => {
+  const tinySize = '50x?'
+
   before(async () => {
     await fs.remove(absolutePath('./out'))
-    await fs.mkdirp(absolutePath('./out'))
+    await fs.mkdirp(absolutePath('./out/storage'))
+    await fs.mkdirp(absolutePath('./out/formats'))
+    await fs.mkdirp(absolutePath('./out/sizes'))
   })
 
   describe('invalid input', () => {
-    const filePath = absolutePath('./data/bunny.webm')
+    const filePath = absolutePath('./data/bunny.mp4')
     const outPath = absolutePath('./out/invalid.png')
 
     it('throws an error on malformed size string', async () => {
@@ -47,6 +49,14 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       }
     })
 
+    it('throws an error given a percentage string with no value (%)', async () => {
+      try {
+        await genThumbnail(filePath, outPath, '%')
+      } catch (err) {
+        expect(err.message).to.equal('Invalid size argument')
+      }
+    })
+
     it('throws a ffmpeg stderr dump on non-zero exit', async () => {
       try {
         await genThumbnail('not a real path', outPath, '200x200')
@@ -59,23 +69,12 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
     })
   })
 
-  describe('creating thumbnails for files saved on disk', () => {
-    it('successfully generates thumbnails', async () => {
-      const files = await filePromise()
+  describe('thumbnail creation for different storage mediums', () => {
+    const filePath = absolutePath('./data/bunny.webm')
 
-      const nestedPromises = files.map(elem => {
-        const input = absolutePath(`./data/${elem}.webm`)
-        const fixedWidthPath = absolutePath(`./out/${elem}.png`)
-        const fixedSizePath = absolutePath(`./out/${elem}-skewed.png`)
-
-        const fixedWidth = genThumbnail(input, fixedWidthPath, '250x?')
-        const fixedSize = genThumbnail(input, fixedSizePath, '300x300')
-
-        return [fixedWidth, fixedSize]
-      })
-
+    it('creates thumbnails for files saved on disk', async () => {
       try {
-        await Promise.all(flatten(nestedPromises))
+        await genThumbnail(filePath, absolutePath('./out/storage/disk.png'), tinySize)
       } catch (err) {
         console.log(err)
 
@@ -83,83 +82,12 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       }
     })
 
-    it('made thumbnails identical to expected results', async () => {
-      const files = await filePromise()
-
-      const nestedPromises = files.map(elem => {
-        const out = x => absolutePath(`./out/${x}`)
-        const expected = x => absolutePath(`./expected/${x}`)
-        const config = { tolerance: 0 }
-        const versions = [
-          `${elem}.png`,
-          `${elem}-skewed.png`
-        ]
-
-        return versions.map(x => looksSame(expected(x), out(x), config))
-      })
-
-      try {
-        const areIdentical = await Promise.all(flatten(nestedPromises))
-
-        expect(areIdentical.every(x => x)).to.be.true()
-      } catch (err) {
-        console.error(err)
-
-        expect.fail()
-      }
-    })
-  })
-
-  describe('creating thumbnails for remote files, ie. via URL', () => {
-    const protocols = ['http', 'https']
-    const filePath = absolutePath('./data/bunny.webm')
-    const outPath = absolutePath('./out/bunny.png')
-    const expectedPath = absolutePath('./expected/bunny.png')
-
-    protocols.forEach((protocol) => {
-      const fileUrl = `${protocol}://www.w3schools.com/html/mov_bbb.webm`
-      const parsedUrl = url.parse(fileUrl)
-
-      nock(`${parsedUrl.protocol}//${parsedUrl.host}`)
-        .get(parsedUrl.path)
-        .replyWithFile(200, filePath, { 'Content-Type': 'video/webm' })
-
-      describe(`${protocol} protocol`, () => {
-        it('successfully generates thumbnails', async () => {
-          try {
-            await genThumbnail(fileUrl, outPath, '200x?')
-          } catch (err) {
-            console.log(err)
-
-            expect.fail()
-          }
-        })
-
-        it('made thumbnails identical to expected result', async () => {
-          const config = { tolerance: 0 }
-
-          try {
-            await looksSame(expectedPath, outPath, config)
-          } catch (err) {
-            console.log(err)
-
-            expect.fail()
-          }
-        })
-      })
-    })
-  })
-
-  describe('creating thumbnails from read streams', () => {
-    const filePath = absolutePath('./data/bunny.webm')
-    const outPath = absolutePath('./out/stream.png')
-    const expectedPath = absolutePath('./expected/stream.png')
-
-    it('successfully generates thumbnails', async () => {
+    // Note: mp4 does not work with read streams, hence the usage of .webm
+    it('creates thumbnails from read streams', async () => {
       const stream = fs.createReadStream(filePath)
 
       try {
-        await genThumbnail(stream, outPath, '?x200')
+        await genThumbnail(stream, absolutePath('./out/storage/stream.png'), tinySize)
       } catch (err) {
         console.log(err)
 
@@ -167,16 +95,116 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       }
     })
 
-    it('made thumbnails identical to expected result', async () => {
-      const config = { tolerance: 0 }
+    describe('creates thumbnails for remote files', () => {
+      const protocols = ['http', 'https']
+
+      protocols.forEach((protocol) => {
+        const fileUrl = `${protocol}://www.w3schools.com/html/mov_bbb.webm`
+        const parsedUrl = url.parse(fileUrl)
+
+        nock(`${parsedUrl.protocol}//${parsedUrl.host}`)
+          .get(parsedUrl.path)
+          .replyWithFile(200, filePath, { 'Content-Type': 'video/webm' })
+
+        it(`${protocol} protocol`, () => {
+          it('successfully generates thumbnails', async () => {
+            try {
+              await genThumbnail(fileUrl, absolutePath(`./out/storage/${protocol}.png`), tinySize)
+            } catch (err) {
+              console.log(err)
+
+              expect.fail()
+            }
+          })
+        })
+      })
+    })
+  })
+
+  describe('file formats', () => {
+    const formats = ['webm', 'mp4']
+
+    formats.forEach((format) => {
+      it(`can create thumbnails for ${format}`, async () => {
+        const filePath = absolutePath(`./data/bunny.${format}`)
+
+        try {
+          await genThumbnail(filePath, absolutePath(`./out/formats/${format}.png`), tinySize)
+        } catch (err) {
+          console.log(err)
+
+          expect.fail()
+        }
+      })
+    })
+  })
+
+  describe('thumbnail sizes', () => {
+    const sizes = ['50%', '200%', '100x?', '?x100', '150x100']
+    const filePath = absolutePath('./data/bunny.webm')
+
+    sizes.forEach((size) => {
+      it(`handles sizes of the form ${size}`, async () => {
+        try {
+          await genThumbnail(
+            filePath,
+            absolutePath(`./out/sizes/size-${size.replace('%', '')}.png`),
+            size
+          )
+        } catch (err) {
+          console.log(err)
+
+          expect.fail()
+        }
+      })
+    })
+  })
+
+  describe('thumbnail correctness', () => {
+    it('produces thumbnail images that are identical to expected output', async () => {
+      const config = { tolerance: 5 }
+      const storageFiles = await fs.readdir(absolutePath('./out/storage'))
+      const formatFiles = await fs.readdir(absolutePath('./out/formats'))
+      const sizeFiles = await fs.readdir(absolutePath('./out/sizes'))
+
+      const storagePromises = storageFiles
+        .map(file => looksSame(
+          absolutePath('./expected/tiny.png'),
+          absolutePath(`./out/storage/${file}`),
+          config
+        ))
+
+      const formatPromises = formatFiles
+        .map(file => looksSame(
+          absolutePath('./expected/tiny.png'),
+          absolutePath(`./out/formats/${file}`),
+          config
+        ))
+
+      const sizePromises = sizeFiles
+        .map(file => looksSame(
+          absolutePath(`./expected/${file}`),
+          absolutePath(`./out/sizes/${file}`),
+          config
+        ))
 
       try {
-        await looksSame(expectedPath, outPath, config)
+        const results = await Promise.all(
+          storagePromises.concat(formatPromises, sizePromises)
+        )
+
+        expect(results.every(x => x)).to.be.true()
       } catch (err) {
         console.log(err)
 
         expect.fail()
       }
+    })
+  })
+
+  describe('external error handling', () => {
+    it('throws an error if stderr fires an error event', async () => {
+
     })
   })
 })

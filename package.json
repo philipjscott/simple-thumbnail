@@ -1,7 +1,7 @@
 {
   "name": "simple-thumbnail",
   "version": "0.0.0-development",
-  "description": "A wrapper library of fluent-ffmpeg that produces a thumbnail image from a video's first frame",
+  "description": "Produce a thumbnail image from a video's first frame",
   "main": "index.js",
   "license": "MIT",
   "author": "Philip Scott <pscott@zeptohost.com>",
@@ -12,9 +12,10 @@
     "video thumbnail"
   ],
   "scripts": {
-    "fix": "standard --fix",
-    "lint": "standard",
-    "test": "yarn run lint && nyc mocha --reporter spec --timeout 15000",
+    "fix": "eslint . --fix",
+    "lint": "eslint .",
+    "test": "yarn run lint && nyc mocha --timeout 15000",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "semantic-release": "semantic-release",
     "travis-deploy-once": "travis-deploy-once"
   },
@@ -22,14 +23,16 @@
     "type": "git",
     "url": "https://github.com/ScottyFillups/simple-thumbnail.git"
   },
-  "dependencies": {
-    "fluent-ffmpeg": "^2.1.2",
-    "parse-filepath": "^1.0.2"
-  },
   "devDependencies": {
-    "array-flatten": "^2.1.1",
     "chai": "^4.1.2",
+    "coveralls": "^3.0.2",
     "dirty-chai": "^2.0.1",
+    "eslint": "^5.4.0",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^7.0.1",
+    "eslint-plugin-promise": "^4.0.0",
+    "eslint-plugin-standard": "^3.1.0",
     "fs-extra": "^7.0.0",
     "looks-same": "^3.3.0",
     "mocha": "^5.2.0",
@@ -37,7 +40,6 @@
     "nyc": "^12.0.2",
     "semantic-release": "^15.9.9",
     "sinon": "^6.1.5",
-    "standard": "^11.0.1",
     "travis-deploy-once": "^5.0.2"
   }
 }
