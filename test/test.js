@@ -25,7 +25,8 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
   before(async () => {
     await fs.remove(absolutePath('./out'))
     await fs.mkdirp(absolutePath('./out/storage'))
-    await fs.mkdirp(absolutePath('./out/formats'))
+    await fs.mkdirp(absolutePath('./out/input-formats'))
+    await fs.mkdirp(absolutePath('./out/image-formats'))
     await fs.mkdirp(absolutePath('./out/sizes'))
   })
 
@@ -129,7 +130,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
         const filePath = absolutePath(`./data/bunny.${format}`)
 
         try {
-          await genThumbnail(filePath, absolutePath(`./out/formats/${format}.png`), tinySize)
+          await genThumbnail(filePath, absolutePath(`./out/input-formats/${format}.png`), tinySize)
         } catch (err) {
           console.log(err)
 
@@ -160,11 +161,33 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
     })
   })
 
+  describe('thumbnail output image formats', () => {
+    const filePath = absolutePath('./data/bunny.webm')
+    const formats = ['gif', 'jpg', 'png']
+
+    formats.forEach((format) => {
+      it(`can create ${format} images`, async () => {
+        try {
+          await genThumbnail(
+            filePath,
+            absolutePath(`./out/image-formats/${format}.${format}`),
+            tinySize
+          )
+        } catch (err) {
+          console.log(err)
+
+          expect.fail()
+        }
+      })
+    })
+  })
+
   describe('thumbnail correctness', () => {
     it('produces thumbnail images that are identical to expected output', async () => {
       const config = { tolerance: 5 }
+
       const storageFiles = await fs.readdir(absolutePath('./out/storage'))
-      const formatFiles = await fs.readdir(absolutePath('./out/formats'))
+      const inputFormatFiles = await fs.readdir(absolutePath('./out/input-formats'))
       const sizeFiles = await fs.readdir(absolutePath('./out/sizes'))
 
       const storagePromises = storageFiles
@@ -174,10 +197,10 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
           config
         ))
 
-      const formatPromises = formatFiles
+      const inputFormatPromises = inputFormatFiles
         .map(file => looksSame(
           absolutePath('./expected/tiny.png'),
-          absolutePath(`./out/formats/${file}`),
+          absolutePath(`./out/input-formats/${file}`),
           config
         ))
 
@@ -190,7 +213,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
 
       try {
         const results = await Promise.all(
-          storagePromises.concat(formatPromises, sizePromises)
+          storagePromises.concat(inputFormatPromises, sizePromises)
         )
 
         expect(results.every(x => x)).to.be.true()
