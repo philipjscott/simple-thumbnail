@@ -83,4 +83,4 @@ function genThumbnail (input, output, size, config = {}) {
     : ffmpegExecute(ffmpegPath, args, input)
 }
 
-module.exports = thumbnail
+module.exports = genThumbnail
