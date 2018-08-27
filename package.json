@@ -9,7 +9,14 @@
     "thumbnail",
     "video",
     "ffmpeg",
-    "video thumbnail"
+    "picture",
+    "image",
+    "resize",
+    "webm",
+    "mp4",
+    "png",
+    "preview",
+    "url"
   ],
   "scripts": {
     "fix": "eslint . --fix",
