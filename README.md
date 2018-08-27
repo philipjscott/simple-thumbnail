@@ -1,6 +1,6 @@
 # simple-thumbnail 
 
-A wrapper library of [fluent-ffmpeg](https://www.npmjs.com/package/fluent-ffmpeg) that produces a thumbnail image from a video's first frame.
+A minimal library that produces a thumbnail image from a video's first frame using `ffmpeg`.
 
 ## Installation
 
@@ -15,28 +15,41 @@ $ npm install simple-thumbnail --save
 ## Usage
 
 ```js
-const thumbnail = require('simple-thumbnail')
+const genThumbnail = require('simple-thumbnail')
 
-thumbnail('path/to/video.webm', 'output/file/path.png', '250x?')
+// promise
+genThumbnail('path/to/video.webm', 'output/file/path.png', '250x?')
+  .then(() => console.log('done!'))
+  .catch(err => console.error(err))
+
+// async/await
+(async () => {
+  try {
+    await genThumbnail('http://www.example.com/foo.webm', 'output/file/path.png', '250x?')
+    console.log('Done!')
+  } catch (err) {
+    console.error(err)
+  }
+})()
 ```
 
 ## API
 
-#### thumbnail(input, output, size)
+#### genThumbnail(input, output, size)
 
 Returns of a `Promise` which resolves on thumbnail creation.
 
 #### input
 
-Type: `String`
+Type: `String | stream.Readable`
 
-The file path of the video.
+The URL, file path, or read-stream of a video.
 
 #### output
 
 Type: `String`
 
-The file path of the generated thumbnail, assumes directory exists.
+The file path of the generated thumbnail, assumes directories exists.
 
 #### size
 
