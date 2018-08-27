@@ -1,5 +1,10 @@
 # simple-thumbnail 
 
+[![npm version](https://badge.fury.io/js/simple-thumbnail.svg)](https://badge.fury.io/js/simple-thumbnail)
+[![Build Status](https://travis-ci.org/ScottyFillups/simple-thumbnail.svg?branch=master)](https://travis-ci.org/ScottyFillups/simple-thumbnail)
+[![Coverage Status](https://coveralls.io/repos/github/ScottyFillups/simple-thumbnail/badge.svg?branch=coverage)](https://coveralls.io/github/ScottyFillups/simple-thumbnail?branch=coverage)
+[![install size](https://packagephobia.now.sh/badge?p=simple-thumbnail)](https://packagephobia.now.sh/result?p=simple-thumbnail)
+
 A minimal library that produces a thumbnail image from a video's first frame using `ffmpeg`.
 
 ## Installation
