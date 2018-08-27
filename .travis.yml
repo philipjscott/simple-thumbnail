@@ -5,6 +5,8 @@ before_install:
   - sudo apt-get install -y ffmpeg
 script:
   - npm run test
+after_script:
+  - npm run coverage
 cache:
   directories:
     - ~/.npm

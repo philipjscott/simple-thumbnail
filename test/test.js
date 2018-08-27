@@ -140,7 +140,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
   })
 
   describe('thumbnail sizes', () => {
-    const sizes = ['50%', '200%', '100x?', '?x100', '150x100']
+    const sizes = ['25%', '101%', '50x?', '?x50', '100x50']
     const filePath = absolutePath('./data/bunny.webm')
 
     sizes.forEach((size) => {
