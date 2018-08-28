@@ -28,14 +28,16 @@ genThumbnail('path/to/video.webm', 'output/file/path.png', '250x?')
   .catch(err => console.error(err))
 
 // async/await
-(async () => {
+async function run () {
   try {
     await genThumbnail('http://www.example.com/foo.webm', 'output/file/path.png', '250x?')
     console.log('Done!')
   } catch (err) {
     console.error(err)
   }
-})()
+}
+
+run()
 ```
 
 ## API
