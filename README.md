@@ -56,7 +56,7 @@ The URL, file path, or read-stream of a video.
 
 Type: `String`
 
-The file path of the generated thumbnail, assumes directories exists.
+The file path of the generated thumbnail, assumes directories exist.
 
 #### size
 
