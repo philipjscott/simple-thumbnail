@@ -150,7 +150,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
           await genThumbnail(
             filePath,
             absolutePath(`./out/sizes/size-${size.replace('%', '')}.png`),
-            size
+            size,
           )
         } catch (err) {
           console.log(err)
@@ -159,6 +159,10 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
         }
       })
     })
+  })
+
+  describe('alternative ffmpeg paths', () => {
+    it('operates correctly when path specified...'
   })
 
   describe('thumbnail output image formats', () => {
