@@ -23,11 +23,17 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
   const tinySize = '50x?'
 
   before(async () => {
+    const directories = [
+      './out',
+      './out/storage',
+      './out/input-formats',
+      './out/bin-paths',
+      './out/sizes'
+    ]
+    const promises = directories.map(path => fs.mkdirp(absolutePath(path)))
+
     await fs.remove(absolutePath('./out'))
-    await fs.mkdirp(absolutePath('./out/storage'))
-    await fs.mkdirp(absolutePath('./out/input-formats'))
-    await fs.mkdirp(absolutePath('./out/image-formats'))
-    await fs.mkdirp(absolutePath('./out/sizes'))
+    await Promise.all(promises)
   })
 
   describe('invalid input', () => {
@@ -74,26 +80,14 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
     const filePath = absolutePath('./data/bunny.webm')
 
     it('creates thumbnails for files saved on disk', async () => {
-      try {
-        await genThumbnail(filePath, absolutePath('./out/storage/disk.png'), tinySize)
-      } catch (err) {
-        console.log(err)
-
-        expect.fail()
-      }
+      await genThumbnail(filePath, absolutePath('./out/storage/disk.png'), tinySize)
     })
 
     // Note: mp4 does not work with read streams, hence the usage of .webm
     it('creates thumbnails from read streams', async () => {
       const stream = fs.createReadStream(filePath)
 
-      try {
-        await genThumbnail(stream, absolutePath('./out/storage/stream.png'), tinySize)
-      } catch (err) {
-        console.log(err)
-
-        expect.fail()
-      }
+      await genThumbnail(stream, absolutePath('./out/storage/stream.png'), tinySize)
     })
 
     describe('creates thumbnails for remote files', () => {
@@ -109,13 +103,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
 
         it(`${protocol} protocol`, () => {
           it('successfully generates thumbnails', async () => {
-            try {
-              await genThumbnail(fileUrl, absolutePath(`./out/storage/${protocol}.png`), tinySize)
-            } catch (err) {
-              console.log(err)
-
-              expect.fail()
-            }
+            await genThumbnail(fileUrl, absolutePath(`./out/storage/${protocol}.png`), tinySize)
           })
         })
       })
@@ -129,13 +117,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       it(`can create thumbnails for ${format}`, async () => {
         const filePath = absolutePath(`./data/bunny.${format}`)
 
-        try {
-          await genThumbnail(filePath, absolutePath(`./out/input-formats/${format}.png`), tinySize)
-        } catch (err) {
-          console.log(err)
-
-          expect.fail()
-        }
+        await genThumbnail(filePath, absolutePath(`./out/input-formats/${format}.png`), tinySize)
       })
     })
   })
@@ -146,23 +128,38 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
 
     sizes.forEach((size) => {
       it(`handles sizes of the form ${size}`, async () => {
-        try {
-          await genThumbnail(
-            filePath,
-            absolutePath(`./out/sizes/size-${size.replace('%', '')}.png`),
-            size,
-          )
-        } catch (err) {
-          console.log(err)
-
-          expect.fail()
-        }
+        await genThumbnail(
+          filePath,
+          absolutePath(`./out/sizes/size-${size.replace('%', '')}.png`),
+          size
+        )
       })
     })
   })
 
-  describe('alternative ffmpeg paths', () => {
-    it('operates correctly when path specified...'
+  describe('alternative ffmpeg binary paths', () => {
+    const filePath = absolutePath('./data/bunny.mp4')
+
+    it('operates correctly when path specified by environment variable', async () => {
+      process.env.FFMPEG_PATH = '/usr/bin/ffmpeg'
+
+      await genThumbnail(
+        filePath,
+        absolutePath('./out/bin-paths/env.png'),
+        tinySize
+      )
+
+      process.env.FFMPEG_PATH = ''
+    })
+
+    it('operates correctly when path specified by config object', async () => {
+      await genThumbnail(
+        filePath,
+        absolutePath('./out/bin-paths/conf.png'),
+        tinySize,
+        { path: '/usr/bin/ffmpeg' }
+      )
+    })
   })
 
   describe('thumbnail output image formats', () => {
@@ -171,17 +168,11 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
 
     formats.forEach((format) => {
       it(`can create ${format} images`, async () => {
-        try {
-          await genThumbnail(
-            filePath,
-            absolutePath(`./out/image-formats/${format}.${format}`),
-            tinySize
-          )
-        } catch (err) {
-          console.log(err)
-
-          expect.fail()
-        }
+        await genThumbnail(
+          filePath,
+          absolutePath(`./out/image-formats/${format}.${format}`),
+          tinySize
+        )
       })
     })
   })
@@ -193,6 +184,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       const storageFiles = await fs.readdir(absolutePath('./out/storage'))
       const inputFormatFiles = await fs.readdir(absolutePath('./out/input-formats'))
       const sizeFiles = await fs.readdir(absolutePath('./out/sizes'))
+      const pathFiles = await fs.readdir(absolutePath('./out/bin-paths'))
 
       const storagePromises = storageFiles
         .map(file => looksSame(
@@ -215,9 +207,16 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
           config
         ))
 
+      const pathPromises = pathFiles
+        .map(file => looksSame(
+          absolutePath(`./expected/tiny.png`),
+          absolutePath(`./out/bin-paths/${file}`),
+          config
+        ))
+
       try {
         const results = await Promise.all(
-          storagePromises.concat(inputFormatPromises, sizePromises)
+          storagePromises.concat(inputFormatPromises, sizePromises, pathPromises)
         )
 
         expect(results.every(x => x)).to.be.true()
