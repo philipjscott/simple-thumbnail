@@ -36,8 +36,8 @@ function parseSize (sizeStr) {
 /**
  * Return an array of string arguments to be passed to ffmpeg
  * @func    buildArgs
- * @param   {string}  input  The input argument for ffmpeg
- * @param   {string}  output The output path for the generated thumbnail
+ * @param   {String}  input  The input argument for ffmpeg
+ * @param   {String}  output The output path for the generated thumbnail
  * @param   {Object}  size   A size object returned from parseSize
  * @param   {Number}  [size.height]     The thumbnail height, in pixels
  * @param   {Number}  [size.width]      The thumbnail width, in pixels
@@ -61,7 +61,7 @@ function buildArgs (input, output, { width, height, percentage }) {
 /**
  * Spawn an instance of ffmpeg and generate a thumbnail
  * @func    ffmpegExecute
- * @param   {string}          path   The path of the ffmpeg binary
+ * @param   {String}          path   The path of the ffmpeg binary
  * @param   {Array<string>}   args   An array of arguments for ffmpeg
  * @param   {stream.Readable} stream A readable stream to pipe data to
  *                                   the standard input of ffmpeg
