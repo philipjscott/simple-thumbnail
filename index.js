@@ -5,7 +5,7 @@ const { spawn } = require('child_process')
 /**
  * Parse a size string (eg. '240x?')
  * @func    parseSize
- * @param   {string} sizeStr  A string in the form of '240x100' or '50%'
+ * @param   {String} sizeStr  A string in the form of '240x100' or '50%'
  * @returns {Object}          Object containing numeric values of the width and height
  *                            of the thumbnail, or the scaling percentage
  */
@@ -98,11 +98,11 @@ function ffmpegExecute (path, args, stream = null) {
 /**
  * Generates a thumbnail from the first frame of a video file
  * @func    genThumbnail
- * @param   {string|stream.Readable} input   Path to video, or a read stream
- * @param   {string}  output                 Output path of the thumbnail
- * @param   {string}  size         The size of the thumbnail, eg. '240x240'
+ * @param   {String|stream.Readable} input   Path to video, or a read stream
+ * @param   {String}  output                 Output path of the thumbnail
+ * @param   {String}  size         The size of the thumbnail, eg. '240x240'
  * @param   {Object}  [config={}]  A configuration object
- * @param   {string}  [config.path='ffmpeg'] Path of the ffmpeg binary
+ * @param   {String}  [config.path='ffmpeg'] Path of the ffmpeg binary
  * @returns {Promise}                        Resolves on completion
  */
 function genThumbnail (input, output, size, config = {}) {
