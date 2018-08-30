@@ -42,7 +42,7 @@ run()
 
 ## API
 
-#### genThumbnail(input, output, size)
+#### genThumbnail(input, output, size, [config])
 
 Returns of a `Promise` which resolves on thumbnail creation.
 
@@ -68,3 +68,15 @@ The dimensions of the generated thumbnail. The `size` argument may have one of t
 * `150x?`: set a fixed width and compute the height automatically.
 * `?x100`: set a fixed height and compute the width automatically.
 * `50%`: rescale both width and height to given percentage.
+
+#### config
+
+Type: `Object`
+
+A configuration object, see details below.
+
+#### config.path
+
+Type: `String`
+
+The path of the `ffmpeg` binary. If omitted, the path will be set to the `FFMPEG_PATH` environment variable. If the environment variable is not set, `ffmpeg` will be invoked directly (ie. `ffmpeg [...]`).
