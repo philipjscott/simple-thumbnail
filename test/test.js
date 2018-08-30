@@ -9,9 +9,9 @@ const url = require('url')
 
 const chai = require('chai')
 const dirtyChai = require('dirty-chai')
-
 const genThumbnail = require('../')
 const looksSame = util.promisify(require('looks-same'))
+const flatten = require('array-flatten')
 const nock = require('nock')
 
 const { expect } = chai
@@ -23,16 +23,18 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
   const tinySize = '50x?'
 
   before(async () => {
+    await fs.remove(absolutePath('./out'))
+
     const directories = [
       './out',
       './out/storage',
       './out/input-formats',
+      './out/image-formats',
       './out/bin-paths',
       './out/sizes'
     ]
     const promises = directories.map(path => fs.mkdirp(absolutePath(path)))
 
-    await fs.remove(absolutePath('./out'))
     await Promise.all(promises)
   })
 
@@ -180,44 +182,25 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
   describe('thumbnail correctness', () => {
     it('produces thumbnail images that are identical to expected output', async () => {
       const config = { tolerance: 5 }
+      const directories = [
+        './out/storage',
+        './out/input-formats',
+        './out/sizes',
+        './out/bin-paths'
+      ]
 
-      const storageFiles = await fs.readdir(absolutePath('./out/storage'))
-      const inputFormatFiles = await fs.readdir(absolutePath('./out/input-formats'))
-      const sizeFiles = await fs.readdir(absolutePath('./out/sizes'))
-      const pathFiles = await fs.readdir(absolutePath('./out/bin-paths'))
+      const nestedPromises = directories.map(async (path) => {
+        const files = await fs.readdir(absolutePath(path))
 
-      const storagePromises = storageFiles
-        .map(file => looksSame(
-          absolutePath('./expected/tiny.png'),
-          absolutePath(`./out/storage/${file}`),
+        return files.map(file => looksSame(
+          absolutePath(`./expected/${path === './out/sizes' ? file : 'tiny.png'}`),
+          absolutePath(`${path}/${file}`),
           config
         ))
-
-      const inputFormatPromises = inputFormatFiles
-        .map(file => looksSame(
-          absolutePath('./expected/tiny.png'),
-          absolutePath(`./out/input-formats/${file}`),
-          config
-        ))
-
-      const sizePromises = sizeFiles
-        .map(file => looksSame(
-          absolutePath(`./expected/${file}`),
-          absolutePath(`./out/sizes/${file}`),
-          config
-        ))
-
-      const pathPromises = pathFiles
-        .map(file => looksSame(
-          absolutePath(`./expected/tiny.png`),
-          absolutePath(`./out/bin-paths/${file}`),
-          config
-        ))
+      })
 
       try {
-        const results = await Promise.all(
-          storagePromises.concat(inputFormatPromises, sizePromises, pathPromises)
-        )
+        const results = await Promise.all(flatten(nestedPromises))
 
         expect(results.every(x => x)).to.be.true()
       } catch (err) {
