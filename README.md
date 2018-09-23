@@ -5,7 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/ScottyFillups/simple-thumbnail/badge.svg?branch=master)](https://coveralls.io/github/ScottyFillups/simple-thumbnail?branch=master)
 [![install size](https://packagephobia.now.sh/badge?p=simple-thumbnail)](https://packagephobia.now.sh/result?p=simple-thumbnail)
 
-A minimal library that produces a thumbnail image from a video's first frame using `ffmpeg`.
+A minimal library that produces thumbnails from images and videos using FFmpeg.
 
 ## Installation
 
@@ -23,7 +23,7 @@ $ npm install simple-thumbnail --save
 const genThumbnail = require('simple-thumbnail')
 
 // promise
-genThumbnail('path/to/video.webm', 'output/file/path.png', '250x?')
+genThumbnail('path/to/image.png', 'output/file/path.png', '250x?')
   .then(() => console.log('done!'))
   .catch(err => console.error(err))
 
@@ -50,7 +50,7 @@ Returns of a `Promise` which resolves on thumbnail creation.
 
 Type: `String | stream.Readable`
 
-The URL, file path, or read-stream of a video.
+The URL, file path, or read-stream of an image or video.
 
 #### output
 
