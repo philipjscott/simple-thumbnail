@@ -80,3 +80,9 @@ A configuration object, see details below.
 Type: `String`
 
 The path of the `ffmpeg` binary. If omitted, the path will be set to the `FFMPEG_PATH` environment variable. If the environment variable is not set, `ffmpeg` will be invoked directly (ie. `ffmpeg [...]`).
+
+#### config.seek
+
+Type: `String`
+
+Seeks the video to the provided time. The time must be in the following form: `hh:mm:ss[.ms]`, eg. `00:00:42.23`. If omitted, the video time will be set to `00:00:00` (ie. the first frame).

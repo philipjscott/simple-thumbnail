@@ -42,9 +42,10 @@ function parseSize (sizeStr) {
  * @param   {Number}  [size.height]     The thumbnail height, in pixels
  * @param   {Number}  [size.width]      The thumbnail width, in pixels
  * @param   {Number}  [size.percentage] The thumbnail scaling percentage
+ * @param   {String}  seek   The time to seek, formatted as hh:mm:ss[.ms]
  * @returns {Array<string>}  Array of arguments for ffmpeg
  */
-function buildArgs (input, output, { width, height, percentage }) {
+function buildArgs (input, output, { width, height, percentage }, seek) {
   const scaleArg = (percentage)
     ? `-vf scale=iw*${percentage / 100}:ih*${percentage / 100}`
     : `-vf scale=${width || -1}:${height || -1}`
@@ -53,6 +54,7 @@ function buildArgs (input, output, { width, height, percentage }) {
     '-y',
     `-i ${input}`,
     '-vframes 1',
+    `-ss ${seek}`,
     scaleArg,
     output
   ]
@@ -79,7 +81,6 @@ function ffmpegExecute (path, args, stream = null) {
     ffmpeg.stderr.on('data', (data) => {
       stderr += data.toString()
     })
-    // use sinon?
     ffmpeg.stderr.on('error', (err) => {
       reject(err)
     })
@@ -98,21 +99,24 @@ function ffmpegExecute (path, args, stream = null) {
 /**
  * Generates a thumbnail from the first frame of a video file
  * @func    genThumbnail
- * @param   {String|stream.Readable} input   Path to video, or a read stream
- * @param   {String}  output                 Output path of the thumbnail
+ * @param   {String|stream.Readable} input      Path to video, or a read stream
+ * @param   {String}  output                    Output path of the thumbnail
  * @param   {String}  size         The size of the thumbnail, eg. '240x240'
  * @param   {Object}  [config={}]  A configuration object
- * @param   {String}  [config.path='ffmpeg'] Path of the ffmpeg binary
- * @returns {Promise}                        Resolves on completion
+ * @param   {String}  [config.path='ffmpeg']    Path of the ffmpeg binary
+ * @param   {String}  [config.seek='00:00:00']  Time to seek for videos
+ * @returns {Promise}                           Resolves on completion
  */
 function genThumbnail (input, output, size, config = {}) {
   const ffmpegPath = config.path || process.env.FFMPEG_PATH || 'ffmpeg'
+  const seek = config.seek || '00:00:00'
 
   const parsedSize = parseSize(size)
   const args = buildArgs(
     typeof input === 'string' ? input : 'pipe:0',
     output,
-    parsedSize
+    parsedSize,
+    seek
   )
 
   return typeof input === 'string'
