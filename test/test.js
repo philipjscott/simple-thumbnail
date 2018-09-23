@@ -31,6 +31,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       './out/input-formats',
       './out/image-formats',
       './out/bin-paths',
+      './out/seek',
       './out/sizes'
     ]
     const promises = directories.map(path => fs.mkdirp(absolutePath(path)))
@@ -124,6 +125,16 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
     })
   })
 
+  describe('time seeking', () => {
+    const filePath = absolutePath('./data/bunny.webm')
+
+    it('can seek to an arbitrary time', async () => {
+      await genThumbnail(filePath, absolutePath(`./out/seek/seek.png`), tinySize, {
+        seek: '00:00:00.900'
+      })
+    })
+  })
+
   describe('thumbnail sizes', () => {
     const sizes = ['25%', '101%', '50x?', '?x50', '100x50']
     const filePath = absolutePath('./data/bunny.webm')
@@ -182,6 +193,10 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
   describe('thumbnail correctness', () => {
     it('produces thumbnail images that are identical to expected output', async () => {
       const config = { tolerance: 5 }
+      const specialExpected = [
+        './out/sizes',
+        './out/seek'
+      ]
       const directories = [
         './out/storage',
         './out/input-formats',
@@ -193,7 +208,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
         const files = await fs.readdir(absolutePath(path))
 
         return files.map(file => looksSame(
-          absolutePath(`./expected/${path === './out/sizes' ? file : 'tiny.png'}`),
+          absolutePath(`./expected/${specialExpected.includes(path) ? file : 'tiny.png'}`),
           absolutePath(`${path}/${file}`),
           config
         ))
