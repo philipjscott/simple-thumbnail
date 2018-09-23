@@ -30,6 +30,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       './out/storage',
       './out/input-formats',
       './out/image-formats',
+      './out/images',
       './out/bin-paths',
       './out/seek',
       './out/sizes'
@@ -146,6 +147,20 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
           absolutePath(`./out/sizes/size-${size.replace('%', '')}.png`),
           size
         )
+      })
+    })
+  })
+
+  describe('image support', () => {
+    const filePath = absolutePath('./data/bunny.webm')
+
+    it('it can produce thumbnails from images', async () => {
+      await genThumbnail(filePath, absolutePath(`./out/images/img.png`), tinySize)
+    })
+
+    it('passing in config.seek should not produce an error', async () => {
+      await genThumbnail(filePath, absolutePath(`./out/images/seek.png`), tinySize, {
+        seek: '00:00:00.900'
       })
     })
   })

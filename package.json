@@ -1,7 +1,7 @@
 {
   "name": "simple-thumbnail",
   "version": "0.0.0-development",
-  "description": "Produce a thumbnail image from a video's first frame",
+  "description": "Produce thumbnails from images and videos",
   "main": "index.js",
   "license": "MIT",
   "author": "Philip Scott <pscott@zeptohost.com>",
