@@ -10,10 +10,6 @@ A minimal library that produces thumbnails from images and videos using FFmpeg.
 ## Installation
 
 ```bash
-$ yarn add simple-thumbnail
-
-# Or,
-
 $ npm install simple-thumbnail --save
 ```
 
