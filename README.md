@@ -36,6 +36,25 @@ async function run () {
 run()
 ```
 
+## Getting FFmpeg
+
+For those who don't have FFmpeg installed, there's an NPM package that installs it for you: https://www.npmjs.com/package/ffmpeg-static
+
+```js
+const ffmpeg = require('ffmpeg-static')
+const genThumbnail = require('simple-thumbnail')
+
+async function download () {
+  await genThumbnail('https://www.w3schools.com/Html/mov_bbb.webm', 'bunny.webm', '150x?', {
+    path: ffmpeg.path
+  })
+  
+  console.log('Done!')
+}
+
+download()
+```
+
 ## API
 
 #### genThumbnail(input, output, size, [config])
