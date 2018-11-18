@@ -144,7 +144,7 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       it(`handles sizes of the form ${size}`, async () => {
         await genThumbnail(
           filePath,
-          absolutePath(`./out/sizes/size-${size.replace('%', '')}.png`),
+          absolutePath(`./out/sizes/size-${size.replace('%', '').replace('?', 'X')}.png`),
           size
         )
       })
