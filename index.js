@@ -143,7 +143,7 @@ function genThumbnail (input, output, size, config = {}) {
     seek
   )
 
-  if (!output) {
+  if (output === null) {
     return ffmpegStreamExecute(ffmpegPath, args, rstream)
   }
 
