@@ -34,6 +34,13 @@ async function run () {
 }
 
 run()
+
+// genThumbnail also supports piping to write streams, so you can do this with Express!
+app.get('/some/endpoint', (req, res) => {
+  genThumbnail('path/to/video.webm', res, '150x100')
+    .then(() => console.log('done!'))
+    .catch(err => console.error(err))
+})
 ```
 
 ## Getting FFmpeg
