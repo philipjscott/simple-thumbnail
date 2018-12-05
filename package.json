@@ -1,6 +1,6 @@
 {
   "name": "simple-thumbnail",
-  "version": "1.3.4",
+  "version": "0.0.0-development",
   "description": "Produce thumbnails from images and videos",
   "main": "index.js",
   "license": "MIT",
