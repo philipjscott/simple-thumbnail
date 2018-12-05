@@ -1,4 +1,5 @@
 # simple-thumbnail 
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
 
 [![npm version](https://badge.fury.io/js/simple-thumbnail.svg)](https://badge.fury.io/js/simple-thumbnail)
 [![Build Status](https://travis-ci.org/ScottyFillups/simple-thumbnail.svg?branch=master)](https://travis-ci.org/ScottyFillups/simple-thumbnail)
@@ -101,3 +102,13 @@ The path of the `ffmpeg` binary. If omitted, the path will be set to the `FFMPEG
 Type: `String`
 
 Seeks the video to the provided time. The time must be in the following form: `hh:mm:ss[.ms]`, eg. `00:00:42.23`. If omitted, the video time will be set to `00:00:00` (ie. the first frame).
+
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore -->
+| [<img src="https://avatars2.githubusercontent.com/u/18666879?v=4" width="100px;"/><br /><sub><b>Philip Scott</b></sub>](http://scottyfillups.io)<br />[📖](https://github.com/ScottyFillups/simple-thumbnail/commits?author=ScottyFillups "Documentation") |
+| :---: |
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+<!-- ALL-CONTRIBUTORS-LIST: START - Do not remove or modify this section -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->

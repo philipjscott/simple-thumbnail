@@ -1,0 +1,22 @@
+{
+  "projectName": "simple-thumbnail",
+  "projectOwner": "ScottyFillups",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "contributors": [
+    {
+      "login": "ScottyFillups",
+      "name": "Philip Scott",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/18666879?v=4",
+      "profile": "http://scottyfillups.io",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ]
+}
