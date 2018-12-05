@@ -63,15 +63,15 @@ function buildArgs (input, output, { width, height, percentage }, seek) {
 /**
  * Spawn an instance of ffmpeg and generate a thumbnail
  * @func    ffmpegExecute
- * @param   {String}          path    The path of the ffmpeg binary
- * @param   {Array<string>}   args    An array of arguments for ffmpeg
- * @param   {stream.Readable} rstream A readable stream to pipe data to
- *                                    the standard input of ffmpeg
- * @param   {stream.Writable} wstream A writable stream to receive data from
- *                                    the standard output of ffmpeg
+ * @param   {String}          path      The path of the ffmpeg binary
+ * @param   {Array<string>}   args      An array of arguments for ffmpeg
+ * @param   {stream.Readable} [rstream] A readable stream to pipe data to
+ *                                      the standard input of ffmpeg
+ * @param   {stream.Writable} [wstream] A writable stream to receive data from
+ *                                      the standard output of ffmpeg
  * @returns {Promise}  Promise that resolves once thumbnail is generated
  */
-function ffmpegExecute (path, args, rstream = null, wstream = null) {
+function ffmpegExecute (path, args, rstream, wstream) {
   const ffmpeg = spawn(path, args, { shell: true })
   let stderr = ''
 
@@ -100,6 +100,25 @@ function ffmpegExecute (path, args, rstream = null, wstream = null) {
 }
 
 /**
+ * Spawn an instance of ffmpeg and generate a thumbnail
+ * @func    ffmpegStreamExecute
+ * @param   {String}          path      The path of the ffmpeg binary
+ * @param   {Array<string>}   args      An array of arguments for ffmpeg
+ * @param   {stream.Readable} [rstream] A readable stream to pipe data to
+ *                                      the standard input of ffmpeg
+ * @returns {Promise}  Promise that resolves to ffmpeg stdout
+ */
+function ffmpegStreamExecute (path, args, rstream) {
+  const ffmpeg = spawn(path, args, { shell: true })
+
+  if (rstream) {
+    rstream.pipe(ffmpeg.stdin)
+  }
+
+  return Promise.resolve(ffmpeg.stdout)
+}
+
+/**
  * Generates a thumbnail from the first frame of a video file
  * @func    genThumbnail
  * @param   {String|stream.Readable}   input    Path to video, or a read stream
@@ -113,6 +132,8 @@ function ffmpegExecute (path, args, rstream = null, wstream = null) {
 function genThumbnail (input, output, size, config = {}) {
   const ffmpegPath = config.path || process.env.FFMPEG_PATH || 'ffmpeg'
   const seek = config.seek || '00:00:00'
+  const rstream = typeof input === 'string' ? null : input
+  const wstream = typeof output === 'string' ? null : output
 
   const parsedSize = parseSize(size)
   const args = buildArgs(
@@ -122,12 +143,11 @@ function genThumbnail (input, output, size, config = {}) {
     seek
   )
 
-  return ffmpegExecute(
-    ffmpegPath,
-    args,
-    typeof input === 'string' ? null : input,
-    typeof output === 'string' ? null : output
-  )
+  if (output === null) {
+    return ffmpegStreamExecute(ffmpegPath, args, rstream)
+  }
+
+  return ffmpegExecute(ffmpegPath, args, rstream, wstream)
 }
 
 module.exports = genThumbnail

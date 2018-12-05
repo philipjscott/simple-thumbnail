@@ -76,9 +76,9 @@ The URL, file path, or read-stream of an image or video.
 
 #### output
 
-Type: `String | stream.Writable`
+Type: `String | stream.Writable | Null`
 
-The file path of the generated thumbnail or a write-stream. If you're specifying a file path, make sure the directories exist.
+The file path of the generated thumbnail, a write-stream, or null. If null, `genThumbnail` will resolve to a read-stream that you can pipe somewhere. If you're specifying a file path, make sure the directories exist.
 
 #### size
 

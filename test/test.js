@@ -241,8 +241,46 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
     })
   })
 
-  describe('write-stream output', () => {
+  describe('stream output', () => {
     it('writes to a file via a write-stream', async () => {
+      const outPath = absolutePath('./out/write.png')
+      const filePath = absolutePath('./data/bunny.mp4')
+      const writeStream = fs.createWriteStream(outPath)
+
+      await genThumbnail(filePath, writeStream, tinySize)
+    })
+
+    it('returns a read-stream on null output', function (done) {
+      const outPath = absolutePath('./out/read.png')
+      const filePath = absolutePath('./data/bunny.mp4')
+      const writeStream = fs.createWriteStream(outPath)
+
+      genThumbnail(filePath, null, tinySize)
+        .then((readStream) => {
+          readStream.pipe(writeStream)
+
+          writeStream.on('finish', done)
+          writeStream.on('error', done)
+        })
+    })
+
+    it('handles input read stream on null output', function (done) {
+      const outPath = absolutePath('./out/readstream.png')
+      const inputStream = fs.createReadStream(absolutePath('./data/bunny.mp4'))
+      const writeStream = fs.createWriteStream(outPath)
+
+      genThumbnail(inputStream, null, tinySize)
+        .then((readStream) => {
+          readStream.pipe(writeStream)
+
+          writeStream.on('finish', done)
+          writeStream.on('error', done)
+        })
+    })
+  })
+
+  describe('read-stream output', () => {
+    it('returns a read-stream on null output', async () => {
       const outPath = absolutePath('./out/write.png')
       const filePath = absolutePath('./data/bunny.mp4')
       const writeStream = fs.createWriteStream(outPath)
