@@ -1,5 +1,5 @@
 # simple-thumbnail 
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=rounded)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=rounded)](#contributors)
 [![npm version](https://badge.fury.io/js/simple-thumbnail.svg)](https://badge.fury.io/js/simple-thumbnail)
 [![Build Status](https://travis-ci.org/ScottyFillups/simple-thumbnail.svg?branch=master)](https://travis-ci.org/ScottyFillups/simple-thumbnail)
 [![Coverage Status](https://coveralls.io/repos/github/ScottyFillups/simple-thumbnail/badge.svg?branch=master)](https://coveralls.io/github/ScottyFillups/simple-thumbnail?branch=master)
@@ -34,6 +34,13 @@ async function run () {
 }
 
 run()
+
+// genThumbnail also supports piping to write streams, so you can do this with Express!
+app.get('/some/endpoint', (req, res) => {
+  genThumbnail('path/to/video.webm', res, '150x100')
+    .then(() => console.log('done!'))
+    .catch(err => console.error(err))
+})
 ```
 
 ## Getting FFmpeg
@@ -69,9 +76,9 @@ The URL, file path, or read-stream of an image or video.
 
 #### output
 
-Type: `String`
+Type: `String | stream.Writable | Null`
 
-The file path of the generated thumbnail, assumes directories exist.
+The file path of the generated thumbnail, a write-stream, or null. If null, `genThumbnail` will resolve to a read-stream that you can pipe somewhere. If you're specifying a file path, make sure the directories exist.
 
 #### size
 
@@ -106,8 +113,12 @@ Seeks the video to the provided time. The time must be in the following form: `h
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore -->
-| [<img src="https://avatars2.githubusercontent.com/u/18666879?v=4" width="100px;"/><br /><sub><b>Philip Scott</b></sub>](http://scottyfillups.io)<br />[📖](https://github.com/ScottyFillups/simple-thumbnail/commits?author=ScottyFillups "Documentation") |
-| :---: |
+| [<img src="https://avatars2.githubusercontent.com/u/18666879?v=4" width="100px;"/><br /><sub><b>Philip Scott</b></sub>](http://scottyfillups.io)<br />[📖](https://github.com/ScottyFillups/simple-thumbnail/commits?author=ScottyFillups "Documentation") [💻](https://github.com/ScottyFillups/simple-thumbnail/commits?author=ScottyFillups "Code") [🎨](#design-ScottyFillups "Design") | [<img src="https://avatars1.githubusercontent.com/u/2668906?v=4" width="100px;"/><br /><sub><b>cmd430</b></sub>](https://github.com/cmd430)<br />[💻](https://github.com/ScottyFillups/simple-thumbnail/commits?author=cmd430 "Code") [🤔](#ideas-cmd430 "Ideas, Planning, & Feedback") |
+| :---: | :---: |
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 <!-- ALL-CONTRIBUTORS-LIST: START - Do not remove or modify this section -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/kentcdodds/all-contributors) specification.
+
+Contributions of any kind are welcome!

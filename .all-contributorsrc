@@ -15,7 +15,19 @@
       "avatar_url": "https://avatars2.githubusercontent.com/u/18666879?v=4",
       "profile": "http://scottyfillups.io",
       "contributions": [
-        "doc"
+        "doc",
+        "code",
+        "design"
+      ]
+    },
+    {
+      "login": "cmd430",
+      "name": "cmd430",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/2668906?v=4",
+      "profile": "https://github.com/cmd430",
+      "contributions": [
+        "code",
+        "ideas"
       ]
     }
   ]
