@@ -113,7 +113,7 @@ Seeks the video to the provided time. The time must be in the following form: `h
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore -->
-| [<img src="https://avatars2.githubusercontent.com/u/18666879?v=4" width="100px;"/><br /><sub><b>Philip Scott</b></sub>](http://scottyfillups.io)<br />[📖](https://github.com/ScottyFillups/simple-thumbnail/commits?author=ScottyFillups "Documentation") [💻](https://github.com/ScottyFillups/simple-thumbnail/commits?author=ScottyFillups "Code") | [<img src="https://avatars1.githubusercontent.com/u/2668906?v=4" width="100px;"/><br /><sub><b>cmd430</b></sub>](https://github.com/cmd430)<br />[💻](https://github.com/ScottyFillups/simple-thumbnail/commits?author=cmd430 "Code") |
+| [<img src="https://avatars2.githubusercontent.com/u/18666879?v=4" width="100px;"/><br /><sub><b>Philip Scott</b></sub>](http://scottyfillups.io)<br />[📖](https://github.com/ScottyFillups/simple-thumbnail/commits?author=ScottyFillups "Documentation") [💻](https://github.com/ScottyFillups/simple-thumbnail/commits?author=ScottyFillups "Code") [🎨](#design-ScottyFillups "Design") | [<img src="https://avatars1.githubusercontent.com/u/2668906?v=4" width="100px;"/><br /><sub><b>cmd430</b></sub>](https://github.com/cmd430)<br />[💻](https://github.com/ScottyFillups/simple-thumbnail/commits?author=cmd430 "Code") [🤔](#ideas-cmd430 "Ideas, Planning, & Feedback") |
 | :---: | :---: |
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 <!-- ALL-CONTRIBUTORS-LIST: START - Do not remove or modify this section -->
