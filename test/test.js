@@ -241,6 +241,16 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
     })
   })
 
+  describe('write-stream output', () => {
+    it('writes to a file via a write-stream', async () => {
+      const outPath = absolutePath('./out/write.png')
+      const filePath = absolutePath('./data/bunny.mp4')
+      const writeStream = fs.createWriteStream(outPath)
+
+      await genThumbnail(filePath, writeStream, tinySize)
+    })
+  })
+
   describe('external error handling', () => {
     it('throws an error if stderr fires an error event', async () => {
 

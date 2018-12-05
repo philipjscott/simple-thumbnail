@@ -63,19 +63,24 @@ function buildArgs (input, output, { width, height, percentage }, seek) {
 /**
  * Spawn an instance of ffmpeg and generate a thumbnail
  * @func    ffmpegExecute
- * @param   {String}          path   The path of the ffmpeg binary
- * @param   {Array<string>}   args   An array of arguments for ffmpeg
- * @param   {stream.Readable} stream A readable stream to pipe data to
- *                                   the standard input of ffmpeg
+ * @param   {String}          path    The path of the ffmpeg binary
+ * @param   {Array<string>}   args    An array of arguments for ffmpeg
+ * @param   {stream.Readable} rstream A readable stream to pipe data to
+ *                                    the standard input of ffmpeg
+ * @param   {stream.Writable} wstream A writable stream to receive data from
+ *                                    the standard output of ffmpeg
  * @returns {Promise}  Promise that resolves once thumbnail is generated
  */
-function ffmpegExecute (path, args, stream = null) {
+function ffmpegExecute (path, args, rstream = null, wstream = null) {
   const ffmpeg = spawn(path, args, { shell: true })
   let stderr = ''
 
   return new Promise((resolve, reject) => {
-    if (stream) {
-      stream.pipe(ffmpeg.stdin)
+    if (rstream) {
+      rstream.pipe(ffmpeg.stdin)
+    }
+    if (wstream) {
+      ffmpeg.stdout.pipe(wstream)
     }
 
     ffmpeg.stderr.on('data', (data) => {
@@ -84,23 +89,21 @@ function ffmpegExecute (path, args, stream = null) {
     ffmpeg.stderr.on('error', (err) => {
       reject(err)
     })
-
-    ffmpeg.on('close', resolve)
     ffmpeg.on('exit', (code, signal) => {
       if (code !== 0) {
         const err = new Error(`ffmpeg exited ${code}\nffmpeg stderr:\n\n${stderr}`)
-
         reject(err)
       }
     })
+    ffmpeg.on('close', resolve)
   })
 }
 
 /**
  * Generates a thumbnail from the first frame of a video file
  * @func    genThumbnail
- * @param   {String|stream.Readable} input      Path to video, or a read stream
- * @param   {String}  output                    Output path of the thumbnail
+ * @param   {String|stream.Readable}   input    Path to video, or a read stream
+ * @param   {String|stream.Writeable}  output   Output path of the thumbnail
  * @param   {String}  size         The size of the thumbnail, eg. '240x240'
  * @param   {Object}  [config={}]  A configuration object
  * @param   {String}  [config.path='ffmpeg']    Path of the ffmpeg binary
@@ -114,14 +117,17 @@ function genThumbnail (input, output, size, config = {}) {
   const parsedSize = parseSize(size)
   const args = buildArgs(
     typeof input === 'string' ? input : 'pipe:0',
-    output,
+    typeof output === 'string' ? output : '-f singlejpeg pipe:1',
     parsedSize,
     seek
   )
 
-  return typeof input === 'string'
-    ? ffmpegExecute(ffmpegPath, args)
-    : ffmpegExecute(ffmpegPath, args, input)
+  return ffmpegExecute(
+    ffmpegPath,
+    args,
+    typeof input === 'string' ? null : input,
+    typeof output === 'string' ? null : output
+  )
 }
 
 module.exports = genThumbnail
