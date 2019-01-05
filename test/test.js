@@ -2,7 +2,7 @@
 
 const path = require('path')
 const util = require('util')
-const fs = require('fs')
+const fs = require('fs-extra')
 const liburl = require('url')
 const genThumbnail = require('../')
 
