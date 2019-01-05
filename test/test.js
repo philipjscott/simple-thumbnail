@@ -45,7 +45,7 @@ async function imageTestMacro (t, { input, size, title, config }, pathToExpected
   t.true(isSame)
 }
 
-async function imageCreationMacro (t, { input, output, size, config }) {
+function imageCreationMacro (t, { input, output, size, config }) {
   input = input || absPath('./data/bunny.webm')
   size = size || '50x?'
   config = config || {}
