@@ -85,6 +85,10 @@ function streamReturnMacro (t, { input, title }) {
   })
 }
 
+test.before(t => {
+  fs.mkdirp(absPath('./out'))
+})
+
 test('throws error on malformed size string', badSizeStringMacro, 'bad size', 'Invalid size string')
 
 test('throws error given a percentage string with no value', badSizeStringMacro, '%', 'Invalid size string')
