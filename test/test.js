@@ -1,297 +1,165 @@
-/* global before, describe, it */
-
 'use strict'
 
-const fs = require('fs-extra')
 const path = require('path')
 const util = require('util')
+const fs = require('fs')
 const url = require('url')
 
-const chai = require('chai')
-const dirtyChai = require('dirty-chai')
-const genThumbnail = require('../')
+const test = require('ava')
+const streamToArray = require('stream-to-array')
+const ffmpeg = require('ffmpeg-static')
 const looksSame = util.promisify(require('looks-same'))
-const flatten = require('array-flatten')
 const nock = require('nock')
 
-const { expect } = chai
-const absolutePath = relative => path.join(__dirname, relative)
+const absPath = rel => path.join(__dirname, rel)
 
-chai.use(dirtyChai)
+function setFfmpegEnvVar(value, cb) {
+  process.env.FFMPEG_PATH = value
+  
+  return (...args) => {
+    const temp = cb(args)
 
-describe('simple-thumbnail creates thumbnails for videos', () => {
-  const tinySize = '50x?'
+    process.env.FFMPEG_PATH = ''
 
-  before(async () => {
-    await fs.remove(absolutePath('./out'))
+    return temp
+  }
+}
 
-    const directories = [
-      './out',
-      './out/storage',
-      './out/input-formats',
-      './out/image-formats',
-      './out/images',
-      './out/bin-paths',
-      './out/seek',
-      './out/sizes'
-    ]
-    const promises = directories.map(path => fs.mkdirp(absolutePath(path)))
+function streamToBuffer (stream) {
+  return streamToArray(stream)
+    .then(parts => Buffer.concat(
+      parts.map(part => util.isBuffer(part) ? part : Buffer.from(part))
+    ))
+}
 
-    await Promise.all(promises)
-  })
+async function badSizeStringMacro (t, sizeString, expectedErrMsg) {
+  const filePath = absPath('./this/should/not/matter')
+  const outPath = absPath('./foo/bar')
+  const promise = genThumbnail(filePath, outPath, sizeString)
 
-  describe('invalid input', () => {
-    const filePath = absolutePath('./data/bunny.mp4')
-    const outPath = absolutePath('./out/invalid.png')
+  const err = await t.throwsAsync(promise)
 
-    it('throws an error on malformed size string', async () => {
-      try {
-        await genThumbnail(filePath, outPath, 'not a real size')
-      } catch (err) {
-        expect(err.message).to.equal('Invalid size argument')
-      }
-    })
+  t.is(err.message, expectedErrMsg)
+}
 
-    it('throws an error given a "?x?" size string', async () => {
-      try {
-        await genThumbnail(filePath, outPath, '?x?')
-      } catch (err) {
-        expect(err.message).to.equal('Invalid size argument')
-      }
-    })
+async imageTestMacro(t, { input, size, config }, pathToExpected) {
+  input = input || absPath('./data/bunny.webm')
+  size = size || '50x?'
+  config = config || {}
+  pathToExpected = pathToExpected || absPath('./expected/tiny.png')
 
-    it('throws an error given a percentage string with no value (%)', async () => {
-      try {
-        await genThumbnail(filePath, outPath, '%')
-      } catch (err) {
-        expect(err.message).to.equal('Invalid size argument')
-      }
-    })
+  const stream = genThumbnail(input, null, size, config)
+  const buffer = await streamToBuffer(stream)
 
-    it('throws a ffmpeg stderr dump on non-zero exit', async () => {
-      try {
-        await genThumbnail('not a real path', outPath, '200x200')
-      } catch (err) {
-        const stderrLines = err.message.split('\n')
+  const isSame = await looksSame(pathToExpected, buffer, { tolerance: 5 })
 
-        expect(stderrLines[0]).to.equal('ffmpeg exited 1')
-        expect(stderrLines[1]).to.equal('ffmpeg stderr:')
-      }
-    })
-  })
+  t.true(isSame)
+})
 
-  describe('thumbnail creation for different storage mediums', () => {
-    const filePath = absolutePath('./data/bunny.webm')
+async imageCreationMacro(t, { input, output, size, config }) {
+  input = input || absPath('./data/bunny.webm')
+  size = size || '50x?'
+  config = config || {}
+  pathToExpected = pathToExpected || absPath('./expected/tiny.png')
 
-    it('creates thumbnails for files saved on disk', async () => {
-      await genThumbnail(filePath, absolutePath('./out/storage/disk.png'), tinySize)
-    })
+  const promise = genThumbnail(input, output, size, config)
 
-    // Note: mp4 does not work with read streams, hence the usage of .webm
-    it('creates thumbnails from read streams', async () => {
-      const stream = fs.createReadStream(filePath)
+  await t.notThrowsAsync(promise)
+}
 
-      await genThumbnail(stream, absolutePath('./out/storage/stream.png'), tinySize)
-    })
+async httpMediaTestMacro(t, myUrl) {
+  const parsedUrl = url.parse(myUrl)
 
-    describe('creates thumbnails for remote files', () => {
-      const protocols = ['http', 'https']
+  nock(`${parsedUrl.protocol}//${parsedUrl.host}`)
+    .get(parsedUrl.path)
+    .replyWithFile(200, absPath('./data/bunny.webm'), { 'Content-Type': 'video/webm' })
 
-      protocols.forEach((protocol) => {
-        const fileUrl = `${protocol}://www.w3schools.com/html/mov_bbb.webm`
-        const parsedUrl = url.parse(fileUrl)
+  const stream = genThumbnail(myUrl, null, '50x?')
+  const buffer = await streamToBuffer(stream)
 
-        nock(`${parsedUrl.protocol}//${parsedUrl.host}`)
-          .get(parsedUrl.path)
-          .replyWithFile(200, filePath, { 'Content-Type': 'video/webm' })
+  const isSame = await looksSame(pathToExpected, buffer, { tolerance: 5 })
 
-        it(`${protocol} protocol`, () => {
-          it('successfully generates thumbnails', async () => {
-            await genThumbnail(fileUrl, absolutePath(`./out/storage/${protocol}.png`), tinySize)
-          })
-        })
-      })
-    })
-  })
+  t.true(isSame)
+}
 
-  describe('file formats', () => {
-    const formats = ['webm', 'mp4']
+test('throws error on malformed size string', badSizeStringMacro, 'bad size', 'Invalid size argument')
 
-    formats.forEach((format) => {
-      it(`can create thumbnails for ${format}`, async () => {
-        const filePath = absolutePath(`./data/bunny.${format}`)
+test('throws error given a "?x?" size string', badSizeStringMacro, '?x?', 'Invalid size argument')
 
-        await genThumbnail(filePath, absolutePath(`./out/input-formats/${format}.png`), tinySize)
-      })
-    })
-  })
+test('throws error given a percentage string with no value', badSizeStringMacro, '%', 'Invalid size argument')
 
-  describe('time seeking', () => {
-    const filePath = absolutePath('./data/bunny.webm')
+test('throws a ffmpeg stderr dumb on non-zero exit', async t => {
+  const promise = genThumbnail('not real path', './foo/bar', '200x200')
 
-    it('can seek to an arbitrary time', async () => {
-      await genThumbnail(filePath, absolutePath(`./out/seek/seek.png`), tinySize, {
-        seek: '00:00:00.900'
-      })
-    })
-  })
+  const err = await t.throwsAsync(promise)
+  const lines = err.message.split('\n')
 
-  describe('thumbnail sizes', () => {
-    const sizes = ['25%', '101%', '50x?', '?x50', '100x50']
-    const filePath = absolutePath('./data/bunny.webm')
+  t.is(lines[0], 'ffmpeg exited 1')
+  t.is(lines[1], 'ffmpeg stderr:')
+})
 
-    sizes.forEach((size) => {
-      it(`handles sizes of the form ${size}`, async () => {
-        await genThumbnail(
-          filePath,
-          absolutePath(`./out/sizes/size-${size.replace('%', '').replace('?', 'X')}.png`),
-          size
-        )
-      })
-    })
-  })
+test('creates thumbnails for files saved on disk', imageTestMacro, {
+  input: absPath('./data/bunny.webm')
+})
 
-  describe('image support', () => {
-    const filePath = absolutePath('./data/bunny.webm')
+test('creates thumbnails for streams', imageTestMacro, {
+  input: fs.createReadStream('./data/bunny.webm')
+})
 
-    it('it can produce thumbnails from images', async () => {
-      await genThumbnail(filePath, absolutePath(`./out/images/img.png`), tinySize)
-    })
+test('creates thumbnails for http', httpMediaTestMacro,
+  'http://www.w3schools.com/html/mov_bbb.webm')
 
-    it('passing in config.seek should not produce an error', async () => {
-      await genThumbnail(filePath, absolutePath(`./out/images/seek.png`), tinySize, {
-        seek: '00:00:00.900'
-      })
-    })
-  })
+test('creates thumbnails for https', httpMediaTestMacro,
+  'https://www.w3schools.com/html/mov_bbb.webm')
 
-  describe('alternative ffmpeg binary paths', () => {
-    const filePath = absolutePath('./data/bunny.mp4')
+test('can create thumbnails from webm', imageTestMacro, {
+  input: absPath('./data/bunny.webm')
+})
 
-    it('operates correctly when path specified by environment variable', async () => {
-      process.env.FFMPEG_PATH = '/usr/bin/ffmpeg'
+test('can create thumbnails from mp4', imageTestMacro, {
+  input: absPath('./data/bunny.mp4')
+})
 
-      await genThumbnail(
-        filePath,
-        absolutePath('./out/bin-paths/env.png'),
-        tinySize
-      )
+test('can create thumbnails from png', imageTestMacro, {
+  input: absPath('./data/bunny.png')
+})
 
-      process.env.FFMPEG_PATH = ''
-    })
+test('can seek to an arbitrary time', imageTestMacro, {
+  config: { seek: '00:00:00.900' }
+}, absPath('./out/seek/seek.png'))
 
-    it('operates correctly when path specified by config object', async () => {
-      await genThumbnail(
-        filePath,
-        absolutePath('./out/bin-paths/conf.png'),
-        tinySize,
-        { path: '/usr/bin/ffmpeg' }
-      )
-    })
-  })
+test('operates when ffmpeg path prevent via config', imageTestMacro, {
+  config: { path: ffmpeg.path }
+})
 
-  describe('thumbnail output image formats', () => {
-    const filePath = absolutePath('./data/bunny.webm')
-    const formats = ['gif', 'jpg', 'png']
+test('operates when ffmpeg path specified via env var', setFfmpegEnvVar(ffmpeg.path))
 
-    formats.forEach((format) => {
-      it(`can create ${format} images`, async () => {
-        await genThumbnail(
-          filePath,
-          absolutePath(`./out/image-formats/${format}.${format}`),
-          tinySize
-        )
-      })
-    })
-  })
+test('writes to a file via a write-stream', imageCreationMacro, {
+  output: fs.createWriteStream('./out/write.png')
+})
 
-  describe('thumbnail correctness', () => {
-    it('produces thumbnail images that are identical to expected output', async () => {
-      const config = { tolerance: 5 }
-      const specialExpected = [
-        './out/sizes',
-        './out/seek'
-      ]
-      const directories = [
-        './out/storage',
-        './out/input-formats',
-        './out/sizes',
-        './out/bin-paths'
-      ]
+test('returns a read-stream on null', async t => {
+  const input = abPath('./out/write.png')
+  const output = absPath('./data/bunny.mp4')
+  const write = fs.createWriteStream(output)
 
-      const nestedPromises = directories.map(async (path) => {
-        const files = await fs.readdir(absolutePath(path))
+  const stream = await genThumbnail(input, null, '50x?')
 
-        return files.map(file => looksSame(
-          absolutePath(`./expected/${specialExpected.includes(path) ? file : 'tiny.png'}`),
-          absolutePath(`${path}/${file}`),
-          config
-        ))
-      })
+  stream.pipe(write)
+  write.on('finish', () => t.pass())
+  write.on('error', () => t.fail())
+})
 
-      try {
-        const results = await Promise.all(flatten(nestedPromises))
+['25%', '101%', '50x?', '?x50', '100x50'].forEach((size) => {
+  const sanitizeSize = str => str.replace('%', '').replace('?', 'X')
 
-        expect(results.every(x => x)).to.be.true()
-      } catch (err) {
-        console.log(err)
+  test(`handles sizes of the form ${size}`, imageTestMacro, {
+    size
+  }, absPath(`./expected/input-formats/size-${sanitizeSize(size)}.png`)
+})
 
-        expect.fail()
-      }
-    })
-  })
-
-  describe('stream output', () => {
-    it('writes to a file via a write-stream', async () => {
-      const outPath = absolutePath('./out/write.png')
-      const filePath = absolutePath('./data/bunny.mp4')
-      const writeStream = fs.createWriteStream(outPath)
-
-      await genThumbnail(filePath, writeStream, tinySize)
-    })
-
-    it('returns a read-stream on null output', function (done) {
-      const outPath = absolutePath('./out/read.png')
-      const filePath = absolutePath('./data/bunny.mp4')
-      const writeStream = fs.createWriteStream(outPath)
-
-      genThumbnail(filePath, null, tinySize)
-        .then((readStream) => {
-          readStream.pipe(writeStream)
-
-          writeStream.on('finish', done)
-          writeStream.on('error', done)
-        })
-    })
-
-    it('handles input read stream on null output', function (done) {
-      const outPath = absolutePath('./out/readstream.png')
-      const inputStream = fs.createReadStream(absolutePath('./data/bunny.mp4'))
-      const writeStream = fs.createWriteStream(outPath)
-
-      genThumbnail(inputStream, null, tinySize)
-        .then((readStream) => {
-          readStream.pipe(writeStream)
-
-          writeStream.on('finish', done)
-          writeStream.on('error', done)
-        })
-    })
-  })
-
-  describe('read-stream output', () => {
-    it('returns a read-stream on null output', async () => {
-      const outPath = absolutePath('./out/write.png')
-      const filePath = absolutePath('./data/bunny.mp4')
-      const writeStream = fs.createWriteStream(outPath)
-
-      await genThumbnail(filePath, writeStream, tinySize)
-    })
-  })
-
-  describe('external error handling', () => {
-    it('throws an error if stderr fires an error event', async () => {
-
-    })
+['gif', 'jpg', 'png'].forEach(format => {
+  test(`it can create ${format} images`, imageCreationMacro, {
+    output: absPath(`./out/image-formats/${format}.${format}`)
   })
 })

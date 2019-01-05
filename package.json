@@ -34,18 +34,16 @@
   },
   "devDependencies": {
     "all-contributors-cli": "^5.4.1",
-    "array-flatten": "^2.1.1",
-    "chai": "^4.1.2",
+    "ava": "^1.0.1",
     "coveralls": "^3.0.2",
-    "dirty-chai": "^2.0.1",
+    "ffmpeg-static": "^2.4.0",
     "fs-extra": "^7.0.0",
     "looks-same": "^3.3.0",
-    "mocha": "^5.2.0",
     "nock": "^9.6.1",
     "nyc": "^12.0.2",
     "semantic-release": "^15.12.0",
-    "sinon": "^6.1.5",
     "standard": "^12.0.1",
+    "stream-to-array": "^2.3.0",
     "travis-deploy-once": "^5.0.9"
   }
 }
