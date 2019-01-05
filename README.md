@@ -122,3 +122,19 @@ Seeks the video to the provided time. The time must be in the following form: `h
 This project follows the [all-contributors](https://github.com/kentcdodds/all-contributors) specification.
 
 Contributions of any kind are welcome!
+
+## Contributing
+
+* Make sure your changes pass the unit tests!
+* To run the tests locally, run:
+
+```js
+npm install
+npm run test
+```
+
+* We use the [Standard](https://standardjs.com/) style guide
+  * Run `npm run fix` to automatically format code to comply with the style guide
+  * Don't feel pressured to code in Standard! Just run `npm run fix`
+* When adding a new feature, please add a unit test in `/test/test.js`
+* If you have any suggestions regarding our workflow, please feel free to open an issue :smile:
