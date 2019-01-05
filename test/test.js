@@ -4,8 +4,8 @@ const path = require('path')
 const util = require('util')
 const fs = require('fs-extra')
 const liburl = require('url')
-const genThumbnail = require('../')
 
+const genThumbnail = require('../')
 const test = require('ava')
 const ffmpeg = require('ffmpeg-static')
 const looksSame = util.promisify(require('looks-same'))
@@ -45,7 +45,7 @@ async function imageTestMacro (t, { input, size, title, config }, pathToExpected
   t.true(isSame)
 }
 
-function imageCreationMacro (t, { input, output, size, config }) {
+async function imageCreationMacro (t, { input, output, size, config }) {
   input = input || absPath('./data/bunny.webm')
   size = size || '50x?'
   config = config || {}
@@ -85,8 +85,8 @@ function streamReturnMacro (t, { input, title }) {
   })
 }
 
-test.before(t => {
-  fs.mkdirp(absPath('./out'))
+test.before(async t => {
+  await fs.mkdirp(absPath('./out'))
 })
 
 test('throws error on malformed size string', badSizeStringMacro, 'bad size', 'Invalid size string')
@@ -165,8 +165,9 @@ test('operates when ffmpeg path specified via env var', async t => {
   process.env.FFMPEG_PATH = ''
 })
 
+// Currently doesn't save in out folder since there's some weird race condition
 test('writes to a file via a write-stream', imageCreationMacro, {
-  output: fs.createWriteStream(absPath('./out/write.png'))
+  output: fs.createWriteStream(absPath('./write.png'))
 })
 
 test.cb('returns a read-stream on null', streamReturnMacro, {
