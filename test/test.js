@@ -4,6 +4,7 @@ const path = require('path')
 const util = require('util')
 const fs = require('fs')
 const url = require('url')
+const genThumbnail = require('../')
 
 const test = require('ava')
 const streamToArray = require('stream-to-array')
@@ -13,9 +14,9 @@ const nock = require('nock')
 
 const absPath = rel => path.join(__dirname, rel)
 
-function setFfmpegEnvVar(value, cb) {
+function setFfmpegEnvVar (value, cb) {
   process.env.FFMPEG_PATH = value
-  
+
   return (...args) => {
     const temp = cb(args)
 
@@ -28,7 +29,7 @@ function setFfmpegEnvVar(value, cb) {
 function streamToBuffer (stream) {
   return streamToArray(stream)
     .then(parts => Buffer.concat(
-      parts.map(part => util.isBuffer(part) ? part : Buffer.from(part))
+      parts.map(part => Buffer.isBuffer(part) ? part : Buffer.from(part))
     ))
 }
 
@@ -42,7 +43,7 @@ async function badSizeStringMacro (t, sizeString, expectedErrMsg) {
   t.is(err.message, expectedErrMsg)
 }
 
-async imageTestMacro(t, { input, size, config }, pathToExpected) {
+async function imageTestMacro (t, { input, size, config }, pathToExpected) {
   input = input || absPath('./data/bunny.webm')
   size = size || '50x?'
   config = config || {}
@@ -54,20 +55,19 @@ async imageTestMacro(t, { input, size, config }, pathToExpected) {
   const isSame = await looksSame(pathToExpected, buffer, { tolerance: 5 })
 
   t.true(isSame)
-})
+}
 
-async imageCreationMacro(t, { input, output, size, config }) {
+async function imageCreationMacro (t, { input, output, size, config }) {
   input = input || absPath('./data/bunny.webm')
   size = size || '50x?'
   config = config || {}
-  pathToExpected = pathToExpected || absPath('./expected/tiny.png')
 
   const promise = genThumbnail(input, output, size, config)
 
   await t.notThrowsAsync(promise)
 }
 
-async httpMediaTestMacro(t, myUrl) {
+async function httpMediaTestMacro (t, myUrl) {
   const parsedUrl = url.parse(myUrl)
 
   nock(`${parsedUrl.protocol}//${parsedUrl.host}`)
@@ -77,7 +77,7 @@ async httpMediaTestMacro(t, myUrl) {
   const stream = genThumbnail(myUrl, null, '50x?')
   const buffer = await streamToBuffer(stream)
 
-  const isSame = await looksSame(pathToExpected, buffer, { tolerance: 5 })
+  const isSame = await looksSame(absPath('./expected/tiny.png'), buffer, { tolerance: 5 })
 
   t.true(isSame)
 }
@@ -139,7 +139,7 @@ test('writes to a file via a write-stream', imageCreationMacro, {
 })
 
 test('returns a read-stream on null', async t => {
-  const input = abPath('./out/write.png')
+  const input = absPath('./out/write.png')
   const output = absPath('./data/bunny.mp4')
   const write = fs.createWriteStream(output)
 
@@ -150,15 +150,15 @@ test('returns a read-stream on null', async t => {
   write.on('error', () => t.fail())
 })
 
-['25%', '101%', '50x?', '?x50', '100x50'].forEach((size) => {
+;['25%', '101%', '50x?', '?x50', '100x50'].forEach((size) => {
   const sanitizeSize = str => str.replace('%', '').replace('?', 'X')
 
   test(`handles sizes of the form ${size}`, imageTestMacro, {
     size
-  }, absPath(`./expected/input-formats/size-${sanitizeSize(size)}.png`)
+  }, absPath(`./expected/input-formats/size-${sanitizeSize(size)}.png`))
 })
 
-['gif', 'jpg', 'png'].forEach(format => {
+;['gif', 'jpg', 'png'].forEach(format => {
   test(`it can create ${format} images`, imageCreationMacro, {
     output: absPath(`./out/image-formats/${format}.${format}`)
   })
