@@ -87,6 +87,10 @@ describe('simple-thumbnail creates thumbnails for videos', () => {
       await genThumbnail(filePath, absolutePath('./out/storage/disk.png'), tinySize)
     })
 
+    it('creates thumbnails for files with spaces', async () => {
+      await genThumbnail(absolutePath('./data/File With Spaces.webm'), absolutePath('./out/storage/spaces.png'), tinySize)
+    })
+
     // Note: mp4 does not work with read streams, hence the usage of .webm
     it('creates thumbnails from read streams', async () => {
       const stream = fs.createReadStream(filePath)

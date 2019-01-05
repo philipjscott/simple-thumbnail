@@ -137,8 +137,8 @@ function genThumbnail (input, output, size, config = {}) {
 
   const parsedSize = parseSize(size)
   const args = buildArgs(
-    typeof input === 'string' ? input : 'pipe:0',
-    typeof output === 'string' ? output : '-f singlejpeg pipe:1',
+    typeof input === 'string' ? `"${input}"` : 'pipe:0',
+    typeof output === 'string' ? `"${output}"` : '-f singlejpeg pipe:1',
     parsedSize,
     seek
   )
