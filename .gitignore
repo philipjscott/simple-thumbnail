@@ -1,5 +1,6 @@
 node_modules/
 test/out/
+test/write.png
 .nyc_output/
 *.swo
 *.swp

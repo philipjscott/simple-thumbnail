@@ -8,8 +8,10 @@ const { spawn } = require('child_process')
  * @param   {String} sizeStr  A string in the form of '240x100' or '50%'
  * @returns {Object}          Object containing numeric values of the width and height
  *                            of the thumbnail, or the scaling percentage
+ * @throws  {Error}           Throws on malformed size string
  */
 function parseSize (sizeStr) {
+  const invalidSizeString = new Error('Invalid size string')
   const percentRegex = /(\d+)%/g
   const sizeRegex = /(\d+|\?)x(\d+|\?)/g
   let size
@@ -27,7 +29,11 @@ function parseSize (sizeStr) {
       height: sizeValues[2]
     }
   } else {
-    throw new Error('Invalid size argument')
+    throw invalidSizeString
+  }
+
+  if (size.width === null && size.height === null) {
+    throw invalidSizeString
   }
 
   return size
@@ -127,7 +133,7 @@ function ffmpegStreamExecute (path, args, rstream) {
  * @param   {Object}  [config={}]  A configuration object
  * @param   {String}  [config.path='ffmpeg']    Path of the ffmpeg binary
  * @param   {String}  [config.seek='00:00:00']  Time to seek for videos
- * @returns {Promise}                           Resolves on completion
+ * @returns {Promise}                           Resolves on completion, or rejects on error
  */
 function genThumbnail (input, output, size, config = {}) {
   const ffmpegPath = config.path || process.env.FFMPEG_PATH || 'ffmpeg'
