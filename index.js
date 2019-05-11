@@ -1,6 +1,7 @@
 'use strict'
 
 const { spawn } = require('child_process')
+const { Duplex } = require('stream')
 
 /**
  * Parse a size string (eg. '240x?')
@@ -124,6 +125,42 @@ function ffmpegStreamExecute (path, args, rstream) {
   return Promise.resolve(ffmpeg.stdout)
 }
 
+class DuplexFfmpeg extends Duplex {
+  constructor (ffmpeg) {
+    super()
+    this.ffmpeg = ffmpeg
+  }
+
+  _read (size) {
+    this.ffmpeg.stdout.on('data', data => {
+      this.push(data)
+    })
+  }
+
+  _write (...args) {
+    this.ffmpeg.on('close', () => {
+      this.end()
+    })
+    this.ffmpeg.stdin._write(...args)
+  }
+
+  _final () {}
+}
+
+/**
+ * Return a duplex stream
+ * @func    ffmpegDuplexExecute
+ * @param   {String}          path      The path of the ffmpeg binary
+ * @param   {Array<string>}   args      An array of arguments for ffmpeg
+ *                                      the standard input of ffmpeg
+ * @returns {stream.Duplex}  A duplex stream :)
+ */
+function ffmpegDuplexExecute (path, args) {
+  const ffmpeg = spawn(path, args, { shell: true })
+
+  return new DuplexFfmpeg(ffmpeg)
+}
+
 /**
  * Generates a thumbnail from the first frame of a video file
  * @func    genThumbnail
@@ -133,7 +170,7 @@ function ffmpegStreamExecute (path, args, rstream) {
  * @param   {Object}  [config={}]  A configuration object
  * @param   {String}  [config.path='ffmpeg']    Path of the ffmpeg binary
  * @param   {String}  [config.seek='00:00:00']  Time to seek for videos
- * @returns {Promise}                           Resolves on completion, or rejects on error
+ * @returns {Promise|stream.Duplex}             Resolves on completion, or rejects on error
  */
 function genThumbnail (input, output, size, config = {}) {
   const ffmpegPath = config.path || process.env.FFMPEG_PATH || 'ffmpeg'
@@ -149,6 +186,10 @@ function genThumbnail (input, output, size, config = {}) {
     seek
   )
 
+  if (input === null && output === null) {
+    console.log(args)
+    return ffmpegDuplexExecute(ffmpegPath, args)
+  }
   if (output === null) {
     return ffmpegStreamExecute(ffmpegPath, args, rstream)
   }

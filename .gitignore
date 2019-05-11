@@ -1,6 +1,7 @@
 node_modules/
 test/out/
 test/write.png
+test/duplex.jpg
 .nyc_output/
 *.swo
 *.swp
