@@ -16,6 +16,7 @@ $ npm install simple-thumbnail --save
 ## Usage
 
 ```js
+const fs = require('fs')
 const genThumbnail = require('simple-thumbnail')
 
 // promise
@@ -41,6 +42,11 @@ app.get('/some/endpoint', (req, res) => {
     .then(() => console.log('done!'))
     .catch(err => console.error(err))
 })
+
+// duplex streams
+fs.createReadStream('path/to/image')
+  .pipe(genThumbnail(null, null, '250x?'))
+  .pipe(fs.createWriteStream('output/file/path.jpg'))
 ```
 
 ## Getting FFmpeg
@@ -66,13 +72,13 @@ download()
 
 #### genThumbnail(input, output, size, [config])
 
-Returns of a `Promise` which resolves on thumbnail creation.
+Returns of a `Promise` which resolves on thumbnail creation, or a `stream.Duplex` (see below).
 
 #### input
 
-Type: `String | stream.Readable`
+Type: `String | stream.Readable | Null`
 
-The URL, file path, or read-stream of an image or video.
+The URL, file path, or read-stream of an image or video. If both the input and output are null, then `genThumbnail` will return a `stream.Duplex`.
 
 #### output
 
