@@ -170,7 +170,7 @@ test('writes to a file via a write-stream', imageCreationMacro, {
   output: fs.createWriteStream(absPath('./write.png'))
 })
 
-test.cb.only('returns a duplex stream for single argument', t => {
+test.cb('returns a duplex stream for single argument', t => {
   const readStream = fs.createReadStream(absPath('./data/bunny.webm'))
   const writeStream = fs.createWriteStream(absPath('./duplex.jpg'))
 
