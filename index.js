@@ -129,6 +129,10 @@ class DuplexFfmpeg extends Duplex {
   constructor (ffmpeg) {
     super()
     this.ffmpeg = ffmpeg
+
+    this.ffmpeg.on('close', () => {
+      this.end()
+    })
   }
 
   _read (size) {
@@ -138,9 +142,6 @@ class DuplexFfmpeg extends Duplex {
   }
 
   _write (...args) {
-    this.ffmpeg.on('close', () => {
-      this.end()
-    })
     this.ffmpeg.stdin._write(...args)
   }
 
@@ -187,7 +188,6 @@ function genThumbnail (input, output, size, config = {}) {
   )
 
   if (input === null && output === null) {
-    console.log(args)
     return ffmpegDuplexExecute(ffmpegPath, args)
   }
   if (output === null) {
