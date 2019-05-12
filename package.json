@@ -40,9 +40,12 @@
     "fs-extra": "^7.0.1",
     "looks-same": "^3.3.0",
     "nock": "^9.6.1",
-    "nyc": "^12.0.2",
-    "semantic-release": "^15.12.0",
+    "nyc": "^14.1.1",
+    "semantic-release": "^15.13.13",
     "standard": "^12.0.1",
     "travis-deploy-once": "^5.0.9"
+  },
+  "dependencies": {
+    "duplexify": "^4.0.0"
   }
 }
