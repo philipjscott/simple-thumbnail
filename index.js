@@ -1,7 +1,7 @@
 'use strict'
 
 const { spawn } = require('child_process')
-const { Duplex } = require('stream')
+const duplexify = require('duplexify')
 
 /**
  * Parse a size string (eg. '240x?')
@@ -125,29 +125,6 @@ function ffmpegStreamExecute (path, args, rstream) {
   return Promise.resolve(ffmpeg.stdout)
 }
 
-class DuplexFfmpeg extends Duplex {
-  constructor (ffmpeg) {
-    super()
-    this.ffmpeg = ffmpeg
-
-    this.ffmpeg.on('close', () => {
-      this.end()
-    })
-  }
-
-  _read (size) {
-    this.ffmpeg.stdout.on('data', data => {
-      this.push(data)
-    })
-  }
-
-  _write (...args) {
-    this.ffmpeg.stdin._write(...args)
-  }
-
-  _final () {}
-}
-
 /**
  * Return a duplex stream
  * @func    ffmpegDuplexExecute
@@ -159,7 +136,7 @@ class DuplexFfmpeg extends Duplex {
 function ffmpegDuplexExecute (path, args) {
   const ffmpeg = spawn(path, args, { shell: true })
 
-  return new DuplexFfmpeg(ffmpeg)
+  return duplexify(ffmpeg.stdin, ffmpeg.stdout)
 }
 
 /**

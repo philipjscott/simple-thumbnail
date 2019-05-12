@@ -174,12 +174,10 @@ test.cb('returns a duplex stream for single argument', t => {
   const readStream = fs.createReadStream(absPath('./data/bunny.webm'))
   const writeStream = fs.createWriteStream(absPath('./duplex.jpg'))
 
-  t.end()
-
   readStream
     .pipe(genThumbnail(null, null, '250x?'))
     .pipe(writeStream)
-  // .on('finish', () => t.end())
+    .on('finish', t.end)
 })
 
 test.cb('returns a read-stream on null', streamReturnMacro, {
