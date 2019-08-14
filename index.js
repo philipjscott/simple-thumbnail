@@ -101,6 +101,10 @@ function ffmpegExecute (path, args, rstream, wstream) {
         const err = new Error(`ffmpeg exited ${code}\nffmpeg stderr:\n\n${stderr}`)
         reject(err)
       }
+      if (stderr.includes('nothing was encoded')) {
+        const err = new Error(`ffmpeg failed to encode file\nffmpeg stderr:\n\n${stderr}`)
+        reject(err)
+      }
     })
     ffmpeg.on('close', resolve)
   })
