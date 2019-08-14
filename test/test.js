@@ -165,7 +165,7 @@ test('operates when ffmpeg path specified via env var', async t => {
   process.env.FFMPEG_PATH = ''
 })
 
-test.only('throws error when seek is outside range', async t => {
+test('throws error when seek is outside range', async t => {
   const input = absPath('./data/bunny.webm')
   const output = absPath('./out/doesnotmatter.png')
 
