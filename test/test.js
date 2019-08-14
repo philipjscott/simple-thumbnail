@@ -165,6 +165,19 @@ test('operates when ffmpeg path specified via env var', async t => {
   process.env.FFMPEG_PATH = ''
 })
 
+test.only('throws error when seek is outside range', async t => {
+  const input = absPath('./data/bunny.webm')
+  const output = absPath('./out/doesnotmatter.png')
+
+  try {
+    await genThumbnail(input, output, '50x?', { seek: '00:05:00' })
+    t.fail()
+  } catch (err) {
+    console.log(err)
+    t.pass()
+  }
+})
+
 // Currently doesn't save in out folder since there's some weird race condition
 test('writes to a file via a write-stream', imageCreationMacro, {
   output: fs.createWriteStream(absPath('./write.png'))
