@@ -74,6 +74,15 @@ async function httpMediaTestMacro (t, { url, title }) {
   t.true(isSame)
 }
 
+async function withArgsMacro (t, { config, title }) {
+  const output = absPath(`./out/${title}.png`)
+
+  await genThumbnail('', output, null, config)
+
+  const isSame = await looksSame(absPath('./expected/args.png'), output, { tolerance: 5 })
+  t.true(isSame)
+}
+
 function streamReturnMacro (t, { input, title }) {
   const output = absPath(`./out/${title}.png`)
   const write = fs.createWriteStream(output)
@@ -113,6 +122,19 @@ test('creates thumbnails for files saved on disk', imageTestMacro, {
 test('creates thumbnails for streams', imageTestMacro, {
   input: fs.createReadStream(absPath('./data/bunny.webm')),
   title: 'stream'
+})
+
+let text = absPath('./data/text.txt').replace(/\\/g, '/').replace(':', '\\:') // Workaround for windows drive letters
+test('can pass args to ffmpeg via config', withArgsMacro, {
+  config: {
+    args: [
+      '-f lavfi',
+      '-i color=c=white:s=640x480:d=5.396',
+      `-filter_complex "drawtext=textfile='${text}':x=0:y=0:fontsize=13:fontcolor=000000"`
+    ],
+    path: ffmpeg.path
+  },
+  title: 'args'
 })
 
 test('creates thumbnails for http', httpMediaTestMacro, {
