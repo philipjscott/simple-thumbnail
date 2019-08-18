@@ -79,8 +79,10 @@ async function withArgsMacro (t, { config, title }) {
 
   await genThumbnail('', output, null, config)
 
-  const isSame = await looksSame(absPath('./expected/args.png'), output, { tolerance: 5 })
-  t.true(isSame)
+  const isSameWin = await looksSame(absPath('./expected/args_win.png'), output, { tolerance: 5 })
+  const isSameDeb = await looksSame(absPath('./expected/args_deb.png'), output, { tolerance: 5 })
+
+  t.true(isSameWin || isSameDeb)
 }
 
 function streamReturnMacro (t, { input, title }) {
