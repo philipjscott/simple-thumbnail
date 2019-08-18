@@ -12,6 +12,8 @@ const duplexify = require('duplexify')
  * @throws  {Error}           Throws on malformed size string
  */
 function parseSize (sizeStr) {
+  if (sizeStr === null) return { skip: true }
+
   const invalidSizeString = new Error('Invalid size string')
   const percentRegex = /(\d+)%/g
   const sizeRegex = /(\d+|\?)x(\d+|\?)/g
@@ -52,19 +54,26 @@ function parseSize (sizeStr) {
  * @param   {String}  seek   The time to seek, formatted as hh:mm:ss[.ms]
  * @returns {Array<string>}  Array of arguments for ffmpeg
  */
-function buildArgs (input, output, { width, height, percentage }, seek) {
-  const scaleArg = (percentage)
-    ? `-vf scale=iw*${percentage / 100}:ih*${percentage / 100}`
-    : `-vf scale=${width || -1}:${height || -1}`
+function buildArgs (input, output, { width, height, percentage, skip }, seek, extraArgs = []) {
+  const scaleArg = (skip)
+    ? undefined
+    : (percentage)
+      ? `-vf scale=iw*${percentage / 100}:ih*${percentage / 100}`
+      : `-vf scale=${width || -1}:${height || -1}`
 
-  return [
+  let args = [
     '-y',
-    `-i ${input}`,
-    '-vframes 1',
+    (input !== '""')
+      ? `-i ${input}`
+      : undefined,
+    '-frames:v 1',
     `-ss ${seek}`,
     scaleArg,
     output
   ]
+  args.forEach(arg => extraArgs.push(arg))
+
+  return extraArgs.filter(arg => { return arg })
 }
 
 /**
@@ -165,7 +174,8 @@ function genThumbnail (input, output, size, config = {}) {
     typeof input === 'string' ? `"${input}"` : 'pipe:0',
     typeof output === 'string' ? `"${output}"` : '-f singlejpeg pipe:1',
     parsedSize,
-    seek
+    seek,
+    config.args
   )
 
   if (input === null && output === null) {
