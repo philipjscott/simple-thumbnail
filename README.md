@@ -115,6 +115,12 @@ Type: `String`
 
 Seeks the video to the provided time. The time must be in the following form: `hh:mm:ss[.ms]`, eg. `00:00:42.23`. If omitted, the video time will be set to `00:00:00` (ie. the first frame).
 
+#### config.args
+
+Type: `Array<String>`
+
+FFmpeg arguments that override the synthetic arguments created by `simple-thumbnail`; you'll likely need to pass include your own `-i` flag, `-y` flag, etc.
+
 ## Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
