@@ -160,15 +160,21 @@ function genThumbnail (input, output, size, config = {}) {
   const rstream = typeof input === 'string' ? null : input
   const wstream = typeof output === 'string' ? null : output
 
-  const parsedSize = parseSize(size)
-  const args = buildArgs(
-    typeof input === 'string' ? `"${input}"` : 'pipe:0',
-    typeof output === 'string' ? `"${output}"` : '-f singlejpeg pipe:1',
-    parsedSize,
-    seek
-  )
+  let args = ''
+  if (config.args) {
+    args = config.args
+  } else {
+    const parsedSize = parseSize(size)
 
-  if (input === null && output === null) {
+    args = buildArgs(
+      typeof input === 'string' ? `"${input}"` : 'pipe:0',
+      typeof output === 'string' ? `"${output}"` : '-f singlejpeg pipe:1',
+      parsedSize,
+      seek
+    )
+  }
+
+  if ((input === null && output === null) || config.args) {
     return ffmpegDuplexExecute(ffmpegPath, args)
   }
   if (output === null) {

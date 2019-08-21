@@ -74,6 +74,14 @@ async function httpMediaTestMacro (t, { url, title }) {
   t.true(isSame)
 }
 
+async function withArgsMacro (t, { config, output }) {
+  await genThumbnail(null, null, null, config)
+
+  const textImageIsSame = await looksSame(absPath('./expected/args-text.png'), output, { tolerance: 5 })
+
+  t.true(textImageIsSame)
+}
+
 function streamReturnMacro (t, { input, title }) {
   const output = absPath(`./out/${title}.png`)
   const write = fs.createWriteStream(output)
@@ -114,6 +122,27 @@ test('creates thumbnails for streams', imageTestMacro, {
   input: fs.createReadStream(absPath('./data/bunny.webm')),
   title: 'stream'
 })
+
+;(function () {
+  const title = 'args'
+  const text = absPath('./data/text.txt')
+  const output = absPath(`./out/${title}.png`)
+  const fontPath = absPath('./utils/opensans.ttf')
+
+  test('can pass args to ffmpeg via config', withArgsMacro, {
+    config: {
+      args: [
+        '-f lavfi',
+        '-i color=c=white:s=640x480:d=5.396',
+        `-filter_complex "drawtext=textfile='${text}':x=0:y=0:fontsize=30:fontcolor=ff00ff:fontfile=${fontPath}"`,
+        '-y',
+        output
+      ],
+      path: ffmpeg.path
+    },
+    output
+  })
+})()
 
 test('creates thumbnails for http', httpMediaTestMacro, {
   url: 'http://www.w3schools.com/html/mov_bbb.webm',
