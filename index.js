@@ -12,8 +12,6 @@ const duplexify = require('duplexify')
  * @throws  {Error}           Throws on malformed size string
  */
 function parseSize (sizeStr) {
-  if (sizeStr === null) return { skip: true }
-
   const invalidSizeString = new Error('Invalid size string')
   const percentRegex = /(\d+)%/g
   const sizeRegex = /(\d+|\?)x(\d+|\?)/g
@@ -54,26 +52,19 @@ function parseSize (sizeStr) {
  * @param   {String}  seek   The time to seek, formatted as hh:mm:ss[.ms]
  * @returns {Array<string>}  Array of arguments for ffmpeg
  */
-function buildArgs (input, output, { width, height, percentage, skip }, seek, extraArgs = []) {
-  const scaleArg = (skip)
-    ? undefined
-    : (percentage)
-      ? `-vf scale=iw*${percentage / 100}:ih*${percentage / 100}`
-      : `-vf scale=${width || -1}:${height || -1}`
+function buildArgs (input, output, { width, height, percentage }, seek) {
+  const scaleArg = (percentage)
+    ? `-vf scale=iw*${percentage / 100}:ih*${percentage / 100}`
+    : `-vf scale=${width || -1}:${height || -1}`
 
-  let args = [
+  return [
     '-y',
-    (input !== '""')
-      ? `-i ${input}`
-      : undefined,
-    '-frames:v 1',
+    `-i ${input}`,
+    '-vframes 1',
     `-ss ${seek}`,
     scaleArg,
     output
   ]
-  args.forEach(arg => extraArgs.push(arg))
-
-  return extraArgs.filter(arg => { return arg })
 }
 
 /**
@@ -169,16 +160,21 @@ function genThumbnail (input, output, size, config = {}) {
   const rstream = typeof input === 'string' ? null : input
   const wstream = typeof output === 'string' ? null : output
 
-  const parsedSize = parseSize(size)
-  const args = buildArgs(
-    typeof input === 'string' ? `"${input}"` : 'pipe:0',
-    typeof output === 'string' ? `"${output}"` : '-f singlejpeg pipe:1',
-    parsedSize,
-    seek,
-    config.args
-  )
+  let args = ''
+  if (config.args) {
+    args = config.args
+  } else {
+    const parsedSize = parseSize(size)
 
-  if (input === null && output === null) {
+    args = buildArgs(
+      typeof input === 'string' ? `"${input}"` : 'pipe:0',
+      typeof output === 'string' ? `"${output}"` : '-f singlejpeg pipe:1',
+      parsedSize,
+      seek
+    )
+  }
+
+  if ((input === null && output === null) || config.args) {
     return ffmpegDuplexExecute(ffmpegPath, args)
   }
   if (output === null) {
