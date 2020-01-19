@@ -79,7 +79,7 @@ function buildArgs (input, output, { width, height, percentage }, seek) {
  * @returns {Promise}  Promise that resolves once thumbnail is generated
  */
 function ffmpegExecute (path, args, rstream, wstream) {
-  const ffmpeg = spawn(path, args, { shell: true })
+  const ffmpeg = spawn(`"${path}"`, args, { shell: true })
   let stderr = ''
 
   return new Promise((resolve, reject) => {
