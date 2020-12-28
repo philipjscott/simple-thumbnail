@@ -168,7 +168,7 @@ class SimpleThumbnail {
    * @param   {String}  [config.seek='00:00:00']  Time to seek for videos
    * @returns {Promise|stream.Duplex}             Resolves on completion, or rejects on error
    */
-  public async generateThumbnail (input: string | Readable, output: string | Writable, size: string, config: Config) {
+  public async generate (input: string | Readable, output: string | Writable, size: string, config: Config) {
     const ffmpegPath = config.path || process.env.FFMPEG_PATH || 'ffmpeg'
     const seek = config.seek || '00:00:00'
     const rstream = typeof input === 'string' ? null : input

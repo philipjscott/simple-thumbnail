@@ -1,4 +1,4 @@
-# simple-thumbnail 
+# simple-thumbnail-ts 
 [![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors)
 [![npm version](https://badge.fury.io/js/simple-thumbnail.svg)](https://badge.fury.io/js/simple-thumbnail)
 [![Build Status](https://travis-ci.org/ScottyFillups/simple-thumbnail.svg?branch=master)](https://travis-ci.org/ScottyFillups/simple-thumbnail)
@@ -21,7 +21,7 @@ import SimpleThumbnail from 'simple-thumbnail-ts'
 
 (async () => {
   try {
-    await new SimpleThumbnail().generateThumbnail('http://www.example.com/foo.webm', 'output/file/path.png', '250x?')
+    await new SimpleThumbnail().generate('http://www.example.com/foo.webm', 'output/file/path.png', '250x?')
     // do something with the image generated in your root dir
     console.log('Done!')
   } catch (err) {
@@ -29,10 +29,10 @@ import SimpleThumbnail from 'simple-thumbnail-ts'
   }
 })()
 
-// SimpleThumbnail.generateThumbnail() also supports piping to write streams, so you can do this with Express!
+// SimpleThumbnail.generate() also supports piping to write streams, so you can do this with Express!
 app.get('/some/endpoint', async (req, res) => {
   try {
-    await new SimpleThumbnail().generateThumbnail('path/to/video.webm', res, '150x100')
+    await new SimpleThumbnail().generate('path/to/video.webm', res, '150x100')
   } catch(err) {
     console.error(err)
   }
@@ -41,7 +41,7 @@ app.get('/some/endpoint', async (req, res) => {
 // duplex streams
 const s = new SimpleThumbnail()
 fs.createReadStream('path/to/image')
-  .pipe(s.generateThumbnail(null, null, '250x?'))
+  .pipe(s.generate(null, null, '250x?'))
   .pipe(fs.createWriteStream('output/file/path.jpg'))
 ```
 
@@ -55,7 +55,7 @@ import SimpleThumbnail from 'simple-thumbnail-ts'
 
 async function download () {
   const s = new SimpleThumbnail()
-  await s.generateThumbnail('https://www.w3schools.com/Html/mov_bbb.webm', 'bunny.webm', '150x?', {
+  await s.generate('https://www.w3schools.com/Html/mov_bbb.webm', 'bunny.webm', '150x?', {
     path: ffmpeg.path
   })
   console.log('Done!')
@@ -64,9 +64,9 @@ async function download () {
 download()
 ```
 
-## API
+## API - SimpleThumbnail Class
 
-#### genThumbnail(input, output, size, [config])
+#### generate(input, output, size, [config])
 
 Returns of a `Promise` which resolves on thumbnail creation, or a `stream.Duplex` (see below).
 
