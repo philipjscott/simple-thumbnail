@@ -1,6 +1,6 @@
 {
   "name": "simple-thumbnail-ts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Produce thumbnails from images, videos and URLs with Typescript. Forked from simple-thumbnail",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
