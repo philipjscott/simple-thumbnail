@@ -6,3 +6,4 @@ test/duplex.jpg
 *.swo
 *.swp
 *.log
+dist/
