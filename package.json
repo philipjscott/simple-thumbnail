@@ -1,10 +1,16 @@
 {
-  "name": "simple-thumbnail",
+  "name": "simple-thumbnail-ts",
   "version": "0.0.0-development",
-  "description": "Produce thumbnails from images, videos and URLs",
-  "main": "index.js",
+  "description": "Produce thumbnails from images, videos and URLs with Typescript",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "author": "Philip Scott <pscott@zeptohost.com>",
+  "contributors": [{
+    "name": "Sebastian Rivera",
+    "email": "sebastian@captis.app",
+    "url": "https://sebas-rivera.com"
+  }],
   "keywords": [
     "thumbnail",
     "video",
@@ -19,6 +25,8 @@
     "url"
   ],
   "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
     "fix": "standard --fix",
     "lint": "standard",
     "test": "standard && nyc ava",
@@ -33,6 +41,8 @@
     "url": "https://github.com/ScottyFillups/simple-thumbnail.git"
   },
   "devDependencies": {
+    "@types/duplexify": "^3.6.0",
+    "@types/node": "^12.0.0",
     "all-contributors-cli": "^5.4.1",
     "ava": "^1.0.1",
     "coveralls": "^3.0.2",
@@ -43,7 +53,8 @@
     "nyc": "^14.1.1",
     "semantic-release": "^15.13.13",
     "standard": "^12.0.1",
-    "travis-deploy-once": "^5.0.9"
+    "travis-deploy-once": "^5.0.9",
+    "typescript": "^4.1.3"
   },
   "dependencies": {
     "duplexify": "^4.0.0"
