@@ -5,47 +5,43 @@
 [![Coverage Status](https://coveralls.io/repos/github/ScottyFillups/simple-thumbnail/badge.svg?branch=master)](https://coveralls.io/github/ScottyFillups/simple-thumbnail?branch=master)
 [![install size](https://packagephobia.now.sh/badge?p=simple-thumbnail)](https://packagephobia.now.sh/result?p=simple-thumbnail)
 
-A minimal library that produces thumbnails from images and videos using FFmpeg.
+A minimal library that produces thumbnails from images and videos using FFmpeg bedazzled with Typescript.
 
 ## Installation
 
 ```bash
-$ npm install simple-thumbnail --save
+$ npm install simple-thumbnail-ts --save
 ```
 
 ## Usage
 
-```js
-const fs = require('fs')
-const genThumbnail = require('simple-thumbnail')
+```ts
+import fs from 'fs'
+import SimpleThumbnail from 'simple-thumbnail-ts'
 
-// promise
-genThumbnail('path/to/image.png', 'output/file/path.png', '250x?')
-  .then(() => console.log('done!'))
-  .catch(err => console.error(err))
-
-// async/await
-async function run () {
+(async () => {
   try {
-    await genThumbnail('http://www.example.com/foo.webm', 'output/file/path.png', '250x?')
+    await new SimpleThumbnail().generateThumbnail('http://www.example.com/foo.webm', 'output/file/path.png', '250x?')
+    // do something with the image generated in your root dir
     console.log('Done!')
   } catch (err) {
     console.error(err)
   }
-}
+})()
 
-run()
-
-// genThumbnail also supports piping to write streams, so you can do this with Express!
-app.get('/some/endpoint', (req, res) => {
-  genThumbnail('path/to/video.webm', res, '150x100')
-    .then(() => console.log('done!'))
-    .catch(err => console.error(err))
+// SimpleThumbnail.generateThumbnail() also supports piping to write streams, so you can do this with Express!
+app.get('/some/endpoint', async (req, res) => {
+  try {
+    await new SimpleThumbnail().generateThumbnail('path/to/video.webm', res, '150x100')
+  } catch(err) {
+    console.error(err)
+  }
 })
 
 // duplex streams
+const s = new SimpleThumbnail()
 fs.createReadStream('path/to/image')
-  .pipe(genThumbnail(null, null, '250x?'))
+  .pipe(s.generateThumbnail(null, null, '250x?'))
   .pipe(fs.createWriteStream('output/file/path.jpg'))
 ```
 
@@ -54,14 +50,14 @@ fs.createReadStream('path/to/image')
 For those who don't have FFmpeg installed, there's an NPM package that installs it for you: https://www.npmjs.com/package/ffmpeg-static
 
 ```js
-const ffmpeg = require('ffmpeg-static')
-const genThumbnail = require('simple-thumbnail')
+import ffmpeg from 'ffmpeg-static'
+import SimpleThumbnail from 'simple-thumbnail-ts'
 
 async function download () {
-  await genThumbnail('https://www.w3schools.com/Html/mov_bbb.webm', 'bunny.webm', '150x?', {
+  const s = new SimpleThumbnail()
+  await s.generateThumbnail('https://www.w3schools.com/Html/mov_bbb.webm', 'bunny.webm', '150x?', {
     path: ffmpeg.path
   })
-  
   console.log('Done!')
 }
 

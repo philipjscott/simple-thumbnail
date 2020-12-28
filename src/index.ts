@@ -15,6 +15,7 @@ interface Config {
 }
 
 class SimpleThumbnail {
+  constructor(){}
   /**
    * Parse a size string (eg. '240x?')
    * @func    parseSize
